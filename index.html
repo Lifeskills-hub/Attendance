@@ -12,10 +12,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         // ==========================================
-        // YOUR CONFIGURED URLS:
+        // YOUR CONFIGURED URLS & PASSWORDS:
         // ==========================================
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBWwEdOiEpi6b6kpkO_jnnbg1h9EBEf0IWTnrYIkB0ByNGyDFST6qadXkR6F7OdQnl/exec";
         const GOOGLE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv";
+        const ADMIN_PASSWORD = "Life$kills";
     </script>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -27,7 +28,7 @@
                 🏫 ITE College West - Attendance & Leave Pass
             </h1>
             <div id="nav-buttons" class="flex gap-2">
-                <button onclick="switchView('admin')" id="nav-admin" class="px-4 py-2 bg-indigo-800 hover:bg-indigo-700 rounded-lg text-sm font-medium transition">Admin Dashboard</button>
+                <button onclick="requestAdminAccess()" id="nav-admin" class="px-4 py-2 bg-indigo-800 hover:bg-indigo-700 rounded-lg text-sm font-medium transition">Admin Dashboard</button>
                 <button onclick="previewStudentView()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Preview Student View</button>
             </div>
         </div>
@@ -180,7 +181,7 @@
 
     </main>
 
-    <!-- ================= OFFICIAL ITE PDF TEMPLATE (PART B REMOVED) ================= -->
+    <!-- ================= OFFICIAL ITE PDF TEMPLATE ================= -->
     <div id="pdf-template" class="hidden">
         <div style="padding: 30px; font-family: Arial, sans-serif; color: #000000; max-width: 800px; margin: 0 auto; background: #ffffff; font-size: 13px; line-height: 1.4;">
             
@@ -195,7 +196,7 @@
                 Part A: To be completed by students
             </div>
 
-            <!-- Student Info Table (Student ID updated) -->
+            <!-- Student Info Table -->
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
                 <tr>
                     <td style="padding: 6px; border: 1px solid #000; width: 20%; font-weight: bold;">Name:</td>
@@ -242,16 +243,36 @@
     </div>
 
     <script>
-        // Initialize App & Routing
+        // Initialize App & Routing with Password Check for Admin
         window.addEventListener('DOMContentLoaded', () => {
             if (window.location.hash.startsWith('#student')) {
                 switchView('student');
             } else {
-                switchView('admin');
-                generateQRCode(); // generate initial QR on load
-                fetchAttendance();
+                // Prompt password for admin view on initial load
+                verifyAdminPassword(true);
             }
         });
+
+        function requestAdminAccess() {
+            verifyAdminPassword(false);
+        }
+
+        function verifyAdminPassword(isInitialLoad) {
+            const enteredPass = prompt("Enter Admin Password:");
+            if (enteredPass === ADMIN_PASSWORD) {
+                switchView('admin');
+                generateQRCode();
+                fetchAttendance();
+            } else {
+                if (enteredPass !== null) {
+                    alert("Incorrect password!");
+                }
+                if (isInitialLoad) {
+                    // If they failed or cancelled on initial load, default to student preview
+                    switchView('student');
+                }
+            }
+        }
 
         function generateQRCode() {
             const reason = document.getElementById('admin-reason').value;
@@ -272,7 +293,7 @@
             const studentUrl = `${baseUrl}#student?${params.toString()}`;
             document.getElementById('student-url-display').value = studentUrl;
 
-            // Re-generate QR Code only when button is clicked
+            // Re-generate QR Code
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
                 text: studentUrl,
