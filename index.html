@@ -150,7 +150,7 @@
                         <input type="text" id="studentClass" placeholder="e.g. DIT/1A/01" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Student ID</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Student ID / NRIC No.</label>
                         <input type="text" id="nric" placeholder="e.g. 1234567" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
@@ -180,6 +180,97 @@
         </div>
 
     </main>
+
+    <!-- ================= OFFICIAL ITE PDF TEMPLATE (Matches Attached PDF Layout) ================= -->
+    <div id="pdf-template" style="display: none; width: 800px; background: #ffffff; padding: 25px; font-family: Arial, sans-serif; color: #000000; font-size: 12px; line-height: 1.4;">
+        
+        <!-- Header -->
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
+            <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px;">ITE COLLEGE WEST</div>
+            <h1 style="font-size: 16px; font-weight: bold; margin: 4px 0;">STUDENT LEAVE FORM</h1>
+        </div>
+
+        <!-- Part A Header -->
+        <div style="background: #e2e8f0; padding: 5px 8px; font-weight: bold; font-size: 11px; border: 1px solid #000; margin-bottom: 8px;">
+            Part A: To be completed by students
+        </div>
+
+        <!-- Student Info Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
+            <tr>
+                <td style="padding: 5px; border: 1px solid #000; width: 18%; font-weight: bold;">Name:</td>
+                <td style="padding: 5px; border: 1px solid #000; width: 42%;" id="pdf-name">-</td>
+                <td style="padding: 5px; border: 1px solid #000; width: 18%; font-weight: bold;">NRIC No.:</td>
+                <td style="padding: 5px; border: 1px solid #000; width: 22%;" id="pdf-nric">-</td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Class:</td>
+                <td style="padding: 5px; border: 1px solid #000;" id="pdf-class">-</td>
+                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Date of Leave:</td>
+                <td style="padding: 5px; border: 1px solid #000;" id="pdf-date">-</td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Time:</td>
+                <td style="padding: 5px; border: 1px solid #000;" colspan="3">From <span id="pdf-time-from" style="font-weight: bold;">-</span> To <span id="pdf-time-to" style="font-weight: bold;">-</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Contact Info:</td>
+                <td style="padding: 5px; border: 1px solid #000;" colspan="3"><span id="pdf-mobile">-</span> | <span id="pdf-email">-</span></td>
+            </tr>
+        </table>
+
+        <!-- Reason for Leave Box (Matching Attached PDF) -->
+        <div style="border: 1px solid #000; padding: 8px; margin-bottom: 10px; font-size: 11px;">
+            <div style="font-weight: bold; margin-bottom: 4px;">Reason for Leave: (Tick one)</div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="width: 50%; padding: 3px;">[ &nbsp; ] See doctor</td>
+                    <td style="width: 50%; padding: 3px;">[ &nbsp; ] Medical/dental appointment/check-up</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px;">[ &nbsp; ] Test/exam</td>
+                    <td style="padding: 3px;">[ &nbsp; ] Attend function at other ITE campus</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 3px; font-weight: bold;">[ X ] Others / Official Function: <span id="pdf-reason" style="text-decoration: underline;">-</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Approving Lecturer / Form Teacher Details -->
+        <div style="border: 1px solid #000; padding: 8px; margin-bottom: 12px; font-size: 11px;">
+            <div style="font-weight: bold; margin-bottom: 4px;">Name of Form Teacher / Approving Lecturer:</div>
+            <div>Name: <span id="pdf-lecturer" style="font-weight: bold;">-</span> &nbsp;&nbsp;|&nbsp;&nbsp; Contact: <span id="pdf-contact" style="font-weight: bold;">-</span></div>
+        </div>
+
+        <!-- Part B Header -->
+        <div style="background: #e2e8f0; padding: 5px 8px; font-weight: bold; font-size: 11px; border: 1px solid #000; margin-bottom: 8px;">
+            Part B: To be completed by staff
+        </div>
+
+        <!-- Part B Staff Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+            <tr>
+                <td style="padding: 6px; border: 1px solid #000; width: 25%; font-weight: bold;">Approval of leave:</td>
+                <td style="padding: 6px; border: 1px solid #000;" colspan="3">[ X ] Yes &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] No</td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Comments / Condition:</td>
+                <td style="padding: 6px; border: 1px solid #000;" colspan="3">Approved for official school event / CCA participation.</td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Name of staff:</td>
+                <td style="padding: 6px; border: 1px solid #000; width: 40%;" id="pdf-lecturer-name">-</td>
+                <td style="padding: 6px; border: 1px solid #000; width: 15%; font-weight: bold;">Date:</td>
+                <td style="padding: 6px; border: 1px solid #000; width: 20%;" id="pdf-staff-date">-</td>
+            </tr>
+        </table>
+
+        <!-- Footer Note -->
+        <div style="margin-top: 15px; border-top: 1px dashed #94a3b8; padding-top: 6px; font-size: 10px; color: #64748b; text-align: center;">
+            Note: Forms should be submitted to Class Advisor for follow-up action. Generated securely via ITE Digital Portal.
+        </div>
+    </div>
 
     <script>
         // Helper to parse URL parameters safely from hash
@@ -320,6 +411,22 @@
                 reason: reason
             };
 
+            // Populate PDF template fields
+            document.getElementById('pdf-name').textContent = formData.name || '-';
+            document.getElementById('pdf-class').textContent = formData.studentClass || '-';
+            document.getElementById('pdf-nric').textContent = formData.nric || '-';
+            document.getElementById('pdf-mobile').textContent = formData.mobile || '-';
+            document.getElementById('pdf-email').textContent = formData.email || '-';
+            const currentDate = new Date().toLocaleDateString();
+            document.getElementById('pdf-date').textContent = currentDate;
+            document.getElementById('pdf-reason').textContent = reason || '-';
+            document.getElementById('pdf-time-from').textContent = timeFrom || '-';
+            document.getElementById('pdf-time-to').textContent = timeTo || '-';
+            document.getElementById('pdf-lecturer').textContent = lecturer || '-';
+            document.getElementById('pdf-contact').textContent = contact || '-';
+            document.getElementById('pdf-lecturer-name').textContent = lecturer || '-';
+            document.getElementById('pdf-staff-date').textContent = currentDate;
+
             // Send to Google Sheets via Apps Script
             if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("YOUR_")) {
                 try {
@@ -334,65 +441,9 @@
                 }
             }
 
-            // Create container and explicitly append it to body so html2canvas can measure/render it properly
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-            container.style.left = '-9999px';
-            container.style.top = '0';
-            container.style.width = '800px';
-            container.style.background = '#ffffff';
-            container.innerHTML = `
-                <div style="padding: 30px; font-family: Arial, sans-serif; color: #000000; width: 800px; background: #ffffff; font-size: 13px; line-height: 1.5;">
-                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
-                        <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px;">ITE COLLEGE WEST</div>
-                        <h1 style="font-size: 18px; font-weight: bold; margin: 5px 0;">STUDENT LEAVE FORM</h1>
-                    </div>
-
-                    <div style="background: #e2e8f0; padding: 6px 10px; font-weight: bold; font-size: 12px; border: 1px solid #000; margin-bottom: 10px;">
-                        Part A: To be completed by students
-                    </div>
-
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
-                        <tr>
-                            <td style="padding: 6px; border: 1px solid #000; width: 18%; font-weight: bold;">Name:</td>
-                            <td style="padding: 6px; border: 1px solid #000; width: 42%;">${formData.name || '-'}</td>
-                            <td style="padding: 6px; border: 1px solid #000; width: 18%; font-weight: bold;">Student ID:</td>
-                            <td style="padding: 6px; border: 1px solid #000; width: 22%;">${formData.nric || '-'}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Class:</td>
-                            <td style="padding: 6px; border: 1px solid #000;">${formData.studentClass || '-'}</td>
-                            <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Date of Leave:</td>
-                            <td style="padding: 6px; border: 1px solid #000;">${new Date().toLocaleDateString()}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Time:</td>
-                            <td style="padding: 6px; border: 1px solid #000;" colspan="3">From <b>${timeFrom || '-'}</b> To <b>${timeTo || '-'}</b></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Contact Info:</td>
-                            <td style="padding: 6px; border: 1px solid #000;" colspan="3">${formData.mobile || '-'} | ${formData.email || '-'}</td>
-                        </tr>
-                    </table>
-
-                    <div style="margin-bottom: 12px; border: 1px solid #000; padding: 10px;">
-                        <div style="font-weight: bold; margin-bottom: 5px;">Reason for Leave:</div>
-                        <div>☒ Others / Official Function: <u><b>${reason || '-'}</b></u></div>
-                    </div>
-
-                    <div style="margin-bottom: 25px; border: 1px solid #000; padding: 10px;">
-                        <div style="font-weight: bold; margin-bottom: 5px;">Approving Lecturer Details:</div>
-                        <div>Name: <b>${lecturer || '-'}</b> &nbsp;&nbsp;|&nbsp;&nbsp; Contact Number: <b>${contact || '-'}</b></div>
-                    </div>
-
-                    <div style="margin-top: 20px; border-top: 1px dashed #94a3b8; padding-top: 8px; font-size: 11px; color: #64748b; text-align: center;">
-                        Note: Forms should be submitted to Class Advisor for follow-up action. Generated securely via ITE Digital Portal.
-                    </div>
-                </div>
-            `;
-            
-            // Attach to DOM temporarily so html2canvas can compute layout & styles
-            document.body.appendChild(container);
+            // Temporarily display template for reliable html2pdf capture
+            const element = document.getElementById('pdf-template');
+            element.style.display = 'block';
 
             const opt = {
                 margin:       10,
@@ -402,14 +453,14 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().from(container).set(opt).save().then(() => {
-                document.body.removeChild(container); // Clean up element from DOM
+            html2pdf().from(element).set(opt).save().then(() => {
+                element.style.display = 'none'; // Hide again after download
                 btn.disabled = false;
                 btn.textContent = "Submit & Download Official Leave Form PDF";
                 alert("Attendance recorded and PDF leave form downloaded successfully!");
                 document.getElementById('attendance-form').reset();
             }).catch(err => {
-                document.body.removeChild(container); // Clean up on error too
+                element.style.display = 'none';
                 console.error(err);
                 btn.disabled = false;
                 btn.textContent = "Submit & Download Official Leave Form PDF";
