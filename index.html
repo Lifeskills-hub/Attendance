@@ -125,7 +125,7 @@
 
 <!-- Hidden source only. It is cloned into the viewport for html2canvas. -->
 <div id="pdf-source">
-  <div id="pdf-document" style="width:760px;box-sizing:border-box;background:#fff;padding:24px;font-family:Arial,sans-serif;color:#000;font-size:12px;line-height:1.4">
+  <div id="pdf-document" style="width:720px;box-sizing:border-box;background:#fff;padding:20px;font-family:Arial,sans-serif;color:#000;font-size:12px;line-height:1.4">
     <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:15px">
       <div style="font-size:11px;font-weight:bold;letter-spacing:1px">ITE COLLEGE WEST</div>
       <h1 style="font-size:16px;margin:4px 0">STUDENT LEAVE FORM</h1>
@@ -138,10 +138,10 @@
       <tr><td class="pdf-label">Contact:</td><td class="pdf-cell" colspan="3"><span id="pdf-mobile">-</span> | <span id="pdf-email">-</span></td></tr>
     </table>
     <div style="border:1px solid #000;padding:8px;margin-bottom:10px;font-size:11px">
-      <b>Reason for Leave:</b>
-      <p>[ &nbsp; ] See doctor &nbsp;&nbsp; [ &nbsp; ] Medical/dental appointment/check-up</p>
-      <p>[ &nbsp; ] Test/exam &nbsp;&nbsp; [ &nbsp; ] Attend function at other ITE campus</p>
-      <p><b>[ X ] Others / Official Function: <u id="pdf-reason">-</u></b></p>
+      <div style="font-weight:bold;margin-bottom:6px">Official Function / Approved Activity</div>
+      <div style="min-height:40px;padding:6px;border:1px solid #666;background:#fafafa;font-weight:bold;box-sizing:border-box;overflow-wrap:anywhere">
+        <span id="pdf-reason">-</span>
+      </div>
     </div>
     <div style="border:1px solid #000;padding:8px;margin-bottom:12px;font-size:11px">
       <b>Name of Form Teacher / Approving Lecturer:</b><br>
@@ -168,7 +168,7 @@ const CONFIG = Object.freeze({
   GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyBWwEdOiEpi6b6kpkO_jnnbg1h9EBEf0IWTnrYIkB0ByNGyDFST6qadXkR6F7OdQnl/exec',
   GOOGLE_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv',
   // Client-side passwords are NOT secure. Replace this for testing only and rotate the exposed old password.
-  ADMIN_PASSWORD: 'Life$kills'
+  ADMIN_PASSWORD:Life$kills'
 });
 
 const $ = id => document.getElementById(id);
@@ -276,15 +276,15 @@ async function makePdf(data) {
   clone.removeAttribute('id');
   const host = document.createElement('div');
   host.id = 'pdf-render-host';
-  Object.assign(host.style, {position:'fixed',left:'0',top:'0',width:'800px',background:'#fff',zIndex:'-1',opacity:'1',pointerEvents:'none'});
+  Object.assign(host.style, {position:'fixed',left:'-30px',top:'0',width:'720px',background:'#fff',zIndex:'-1',opacity:'1',pointerEvents:'none'});
   host.appendChild(clone); document.body.appendChild(host);
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const safeName = data.name.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'') || 'Student';
   try {
     await html2pdf().set({
-      margin:[8,8,8,8], filename:`ITE_Leave_Form_${safeName}.pdf`,
+      margin:[12,12,12,12], filename:`ITE_Leave_Form_${safeName}.pdf`,
       image:{type:'jpeg',quality:0.98},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:800},
+      html2canvas:{scale:1.5,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:720},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy'],avoid:['tr']}
     }).from(clone).save();
