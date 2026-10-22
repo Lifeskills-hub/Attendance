@@ -168,8 +168,10 @@
             </form>
         </div>
     </main>
+
     <!-- ================= OFFICIAL ITE PDF TEMPLATE ================= -->
-    <div id="pdf-template" class="hidden">
+    <!-- IMPORTANT: use inline style display:none (not Tailwind .hidden) -->
+    <div id="pdf-template" style="display:none;">
         <div style="padding: 25px; font-family: Arial, sans-serif; color: #000000; max-width: 800px; margin: 0 auto; background: #ffffff; font-size: 13px; line-height: 1.5;">
             
             <!-- Header -->
@@ -220,6 +222,7 @@
             </div>
         </div>
     </div>
+
     <script>
         // Helper to parse URL parameters safely from hash
         function getURLParams() {
@@ -230,6 +233,7 @@
             }
             return new URLSearchParams();
         }
+
         // Initialize App & Routing with Password Check for Admin
         window.addEventListener('DOMContentLoaded', () => {
             if (window.location.hash.startsWith('#student')) {
@@ -238,9 +242,11 @@
                 verifyAdminPassword(true);
             }
         });
+
         function requestAdminAccess() {
             verifyAdminPassword(false);
         }
+
         function verifyAdminPassword(isInitialLoad) {
             const enteredPass = prompt("Enter Admin Password:");
             if (enteredPass === ADMIN_PASSWORD) {
@@ -256,6 +262,7 @@
                 }
             }
         }
+
         function generateQRCode() {
             const reason = document.getElementById('admin-reason').value;
             const timeFrom = document.getElementById('admin-time-from').value;
@@ -284,6 +291,7 @@
             });
             alert("QR Code updated successfully with current settings!");
         }
+
         function switchView(view) {
             const adminView = document.getElementById('view-admin');
             const studentView = document.getElementById('view-student');
@@ -307,6 +315,7 @@
                 document.getElementById('display-locked-contact').textContent = params.get('contact') || document.getElementById('admin-contact').value;
             }
         }
+
         function previewStudentView() {
             const reason = document.getElementById('admin-reason').value;
             const timeFrom = document.getElementById('admin-time-from').value;
@@ -317,12 +326,14 @@
             history.pushState(null, null, `#student?${params.toString()}`);
             switchView('student');
         }
+
         function copyStudentUrl() {
             const copyText = document.getElementById('student-url-display');
             copyText.select();
             navigator.clipboard.writeText(copyText.value);
             alert("Student QR link copied to clipboard!");
         }
+
         // Handle Student Submission & Apps Script POST
         async function handleFormSubmit(e) {
             e.preventDefault();
@@ -361,35 +372,39 @@
                 }
             }
 
-            // Generate PDF – populate values ONLY inside onclone so the clone is guaranteed correct
+            // Generate PDF
             const element = document.getElementById('pdf-template');
 
             const opt = {
                 margin:      10,
                 filename:    `ITE_Leave_Form_${formData.name.replace(/\s+/g, '_')}.pdf`,
                 image:       { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                },
                 jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 onclone: function (clonedDoc) {
-                    // Make the template visible inside the clone
                     const template = clonedDoc.getElementById('pdf-template');
                     if (template) {
-                        template.classList.remove('hidden');
-                        template.style.display = 'block';
+                        // Force the clone to be fully visible and laid out
+                        template.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; position: static !important; left: auto !important; top: auto !important; width: 800px !important; background: #ffffff !important;';
                     }
 
-                    // Fill every field that appears on the PDF
-                    clonedDoc.getElementById('pdf-name').textContent      = formData.name;
-                    clonedDoc.getElementById('pdf-class').textContent     = formData.studentClass;
-                    clonedDoc.getElementById('pdf-nric').textContent      = formData.nric;
-                    clonedDoc.getElementById('pdf-mobile').textContent    = formData.mobile;
-                    clonedDoc.getElementById('pdf-email').textContent     = formData.email;
+                    // Populate all fields in the clone
+                    clonedDoc.getElementById('pdf-name').textContent      = formData.name || '-';
+                    clonedDoc.getElementById('pdf-class').textContent     = formData.studentClass || '-';
+                    clonedDoc.getElementById('pdf-nric').textContent      = formData.nric || '-';
+                    clonedDoc.getElementById('pdf-mobile').textContent    = formData.mobile || '-';
+                    clonedDoc.getElementById('pdf-email').textContent     = formData.email || '-';
                     clonedDoc.getElementById('pdf-date').textContent      = new Date().toLocaleDateString();
-                    clonedDoc.getElementById('pdf-reason').textContent    = reason;
-                    clonedDoc.getElementById('pdf-time-from').textContent = timeFrom;
-                    clonedDoc.getElementById('pdf-time-to').textContent   = timeTo;
-                    clonedDoc.getElementById('pdf-lecturer').textContent  = lecturer;
-                    clonedDoc.getElementById('pdf-contact').textContent   = contact;
+                    clonedDoc.getElementById('pdf-reason').textContent    = reason || '-';
+                    clonedDoc.getElementById('pdf-time-from').textContent = timeFrom || '-';
+                    clonedDoc.getElementById('pdf-time-to').textContent   = timeTo || '-';
+                    clonedDoc.getElementById('pdf-lecturer').textContent  = lecturer || '-';
+                    clonedDoc.getElementById('pdf-contact').textContent   = contact || '-';
                 }
             };
 
@@ -405,6 +420,7 @@
                 alert("PDF generation failed. Please try again.");
             });
         }
+
         // Fetch Attendance using Google Sheets CSV Publish
         async function fetchAttendance() {
             const tbody = document.getElementById('attendance-table-body');
@@ -442,6 +458,7 @@
                 tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-500">Error loading attendance from CSV. Make sure the sheet is published to web.</td></tr>`;
             }
         }
+
         // Helper to cleanly parse CSV text
         function parseCSV(text) {
             let p = '', c = '', r = [[]], q = false;
@@ -463,6 +480,7 @@
             r[r.length-1].push(p);
             return r.filter(row => row.length > 1 && row[0] !== "");
         }
+
         function escapeHtml(text) {
             if (!text) return '';
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
