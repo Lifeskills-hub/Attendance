@@ -243,7 +243,7 @@
     </div>
 
     <script>
-        // Helper to parse URL parameters safely from hash (e.g. #student?reason=...&from=...)
+        // Helper to parse URL parameters safely from hash
         function getURLParams() {
             const hash = window.location.hash;
             const queryIndex = hash.indexOf('?');
@@ -330,10 +330,10 @@
                 studentView.classList.remove('hidden');
                 if (navButtons) navButtons.style.display = 'none';
 
-                // Extract parameters using robust helper
+                // Extract parameters using robust helper or fallback inputs
                 const params = getURLParams();
                 document.getElementById('display-locked-reason').textContent = params.get('reason') || document.getElementById('admin-reason').value;
-                document.getElementById('display-locked-time').textContent = (params.get('from') || '08:30 AM') + ' to ' + (params.get('to') || '05:30 PM');
+                document.getElementById('display-locked-time').textContent = (params.get('from') || document.getElementById('admin-time-from').value) + ' to ' + (params.get('to') || document.getElementById('admin-time-to').value);
                 document.getElementById('display-locked-lecturer').textContent = params.get('lecturer') || document.getElementById('admin-lecturer').value;
                 document.getElementById('display-locked-contact').textContent = params.get('contact') || document.getElementById('admin-contact').value;
             }
@@ -381,14 +381,14 @@
                 reason: reason
             };
 
-            // Populate official PDF template accurately
+            // Populate official PDF template robustly using URL params or fallback UI text
             document.getElementById('pdf-name').textContent = formData.name;
             document.getElementById('pdf-class').textContent = formData.studentClass;
             document.getElementById('pdf-nric').textContent = formData.nric;
             document.getElementById('pdf-mobile').textContent = formData.mobile;
             document.getElementById('pdf-email').textContent = formData.email;
             document.getElementById('pdf-date').textContent = new Date().toLocaleDateString();
-            document.getElementById('pdf-reason').textContent = formData.reason;
+            document.getElementById('pdf-reason').textContent = reason;
             document.getElementById('pdf-time-from').textContent = timeFrom;
             document.getElementById('pdf-time-to').textContent = timeTo;
             document.getElementById('pdf-lecturer').textContent = lecturer;
