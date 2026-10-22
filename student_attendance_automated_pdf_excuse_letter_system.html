@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPass - Student Attendance & Excuse Letter System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- HTML to PDF Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-serif-header {
+            font-family: 'Cinzel', serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .letter-stamp {
+            border: 3px double #1e40af;
+            transform: rotate(-6deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-indigo-950 text-white shadow-xl sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2 rounded-xl text-white shadow-md">
+                        <i class="fa-solid fa-qrcode text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight leading-none">EduPass Portal</h1>
+                        <span class="text-xs text-indigo-300">Self Scan Attendance & Excusal System</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs (Desktop) -->
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('kiosk')" id="tab-btn-kiosk" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 bg-indigo-800 text-white shadow-sm">
+                        <i class="fa-solid fa-display"></i> Classroom QR Kiosk
+                    </button>
+                    <button onclick="switchTab('student-form')" id="tab-btn-student-form" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-indigo-200 hover:text-white hover:bg-indigo-900">
+                        <i class="fa-solid fa-mobile-screen"></i> Student Form View
+                    </button>
+                    <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-indigo-200 hover:text-white hover:bg-indigo-900">
+                        <i class="fa-solid fa-chart-user"></i> Admin Dashboard 
+                        <span id="attendance-count-badge" class="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full">3</span>
+                    </button>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="p-2 rounded-lg text-indigo-200 hover:text-white hover:bg-indigo-900">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-indigo-900 px-4 pt-2 pb-4 space-y-1 border-t border-indigo-800">
+            <button onclick="switchTab('kiosk')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white bg-indigo-800 flex items-center gap-2">
+                <i class="fa-solid fa-display"></i> Classroom QR Kiosk
+            </button>
+            <button onclick="switchTab('student-form')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-indigo-200 hover:bg-indigo-800 flex items-center gap-2">
+                <i class="fa-solid fa-mobile-screen"></i> Student Form View
+            </button>
+            <button onclick="switchTab('dashboard')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-indigo-200 hover:bg-indigo-800 flex items-center justify-between">
+                <span><i class="fa-solid fa-chart-user mr-2"></i> Admin Dashboard</span>
+                <span id="mobile-attendance-count-badge" class="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full">3</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notification Toast Bar -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ==================== VIEW 1: CLASSROOM DISPLAY KIOSK ==================== -->
+        <section id="tab-kiosk" class="tab-content space-y-6">
+            <div class="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-indigo-800/50 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+                
+                <!-- Background Decorative Glow -->
+                <div class="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Left Content: Session Details & Controls -->
+                <div class="lg:w-1/2 space-y-6 z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Attendance Session Active
+                    </div>
+
+                    <div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2" id="kiosk-display-course">CS101: Computer Science Fundamentals</h2>
+                        <p class="text-indigo-200 text-base">Students: Please scan the QR code using your phone camera to register your attendance and generate your official Class Excusal Letter.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-xs">
+                        <div>
+                            <span class="text-indigo-300 block mb-0.5">INSTRUCTOR / LECTURER</span>
+                            <strong class="text-sm text-white" id="kiosk-display-instructor">Prof. Alan Turing</strong>
+                        </div>
+                        <div>
+                            <span class="text-indigo-300 block mb-0.5">ROOM / VENUE</span>
+                            <strong class="text-sm text-white" id="kiosk-display-room">Lecture Hall 3B</strong>
+                        </div>
+                        <div>
+                            <span class="text-indigo-300 block mb-0.5">DATE & TIME</span>
+                            <strong class="text-sm text-white" id="kiosk-display-datetime">Today, 09:00 AM</strong>
+                        </div>
+                        <div>
+                            <span class="text-indigo-300 block mb-0.5">INSTITUTION</span>
+                            <strong class="text-sm text-white">St. Jude Academy</strong>
+                        </div>
+                    </div>
+
+                    <!-- Config / Session Controls Trigger -->
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="toggleSessionConfigModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-sliders"></i> Change Class / Session Details
+                        </button>
+                        <button onclick="switchTab('student-form')" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open Student Form Directly
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Content: Interactive Projected QR Code Badge -->
+                <div class="lg:w-1/2 flex flex-col items-center justify-center z-10 w-full">
+                    <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl border-4 border-indigo-400/30 flex flex-col items-center text-center max-w-sm w-full">
+                        <p class="text-xs font-bold uppercase tracking-wider text-indigo-900 mb-3">Scan with Phone Camera</p>
+                        
+                        <!-- QR Render Box -->
+                        <div id="kiosk-qr-code" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex justify-center items-center my-2 shadow-inner"></div>
+
+                        <div class="mt-4 text-xs text-slate-500 space-y-1">
+                            <p class="font-medium text-slate-700">Can't scan? Use Direct Portal Link:</p>
+                            <div class="flex items-center gap-1 bg-slate-100 p-2 rounded-lg border border-slate-200 mt-1">
+                                <input type="text" readonly id="portal-link-input" value="https://edupass.portal/checkin?session=CS101" class="bg-transparent text-[11px] font-mono text-slate-600 w-full outline-none">
+                                <button onclick="copyPortalLink()" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] rounded font-semibold transition">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==================== VIEW 2: STUDENT CHECK-IN FORM ==================== -->
+        <section id="tab-student-form" class="tab-content hidden space-y-6">
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                    
+                    <!-- Form Card Header -->
+                    <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-6 sm:p-8 relative">
+                        <span class="inline-block bg-indigo-700/60 text-indigo-200 text-xs px-3 py-1 rounded-full font-semibold mb-2">
+                            <i class="fa-solid fa-user-check mr-1"></i> Student Self Check-In
+                        </span>
+                        <h2 class="text-2xl font-bold">Class Attendance & Excusal Form</h2>
+                        <p class="text-xs text-indigo-200 mt-1">Fill in your information below to submit attendance and instantly receive your official digital Excusal Letter PDF.</p>
+                    </div>
+
+                    <!-- Student Entry Form -->
+                    <form id="student-checkin-form" onsubmit="handleStudentFormSubmit(event)" class="p-6 sm:p-8 space-y-5">
+                        
+                        <!-- Active Session Banner -->
+                        <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase text-indigo-500 tracking-wider">Target Course / Subject</span>
+                                <h4 id="form-session-title" class="text-sm font-bold text-slate-800">CS101: Computer Science Fundamentals</h4>
+                            </div>
+                            <span class="text-xs font-semibold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-lg" id="form-session-instructor">Prof. Turing</span>
+                        </div>
+
+                        <!-- Personal Info Group -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Full Student Name <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                                    <input type="text" id="student-name" required placeholder="e.g. Johnathan Doe" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none transition">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Student ID / Reg No <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                                        <input type="text" id="student-id" required placeholder="e.g. S10294" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none transition">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Class / Grade / Section <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-chalkboard-user absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                                        <input type="text" id="student-class" required placeholder="e.g. Class 4-B" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none transition">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Mobile / Phone Number <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-phone absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                                        <input type="tel" id="student-mobile" required placeholder="+65 9123 4567" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none transition">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Student Email Address <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                                        <input type="email" id="student-email" required placeholder="john@student.edu" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none transition">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Reason for Excusal / Note <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-file-pen absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                                    <select id="student-reason-select" onchange="toggleCustomReasonInput()" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none bg-white transition mb-2">
+                                        <option value="Medical Appointment / Medical Leave">Medical Appointment / Medical Leave</option>
+                                        <option value="Official School Event Representation">Official School Representation</option>
+                                        <option value="Family Emergency / Personal Matter">Family Emergency / Personal Leave</option>
+                                        <option value="Custom Reason">Custom Reason...</option>
+                                    </select>
+                                </div>
+                                <textarea id="student-reason-text" rows="3" placeholder="Provide additional details regarding excusal request..." class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none transition">Attending urgent medical consultation certified by Medical Practitioner.</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Action Submit Button -->
+                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-indigo-700 to-indigo-900 hover:from-indigo-800 hover:to-indigo-950 text-white font-bold rounded-xl text-sm shadow-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Check-In & Generate Excuse PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== VIEW 3: ADMIN / TEACHER DASHBOARD ==================== -->
+        <section id="tab-dashboard" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <!-- Header Controls -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-user text-indigo-600"></i> Recorded Attendance Log
+                        </h2>
+                        <p class="text-sm text-slate-500">Live roster of students who scanned & submitted check-in forms</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="exportToCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-file-csv"></i> Export CSV Report
+                        </button>
+                        <button onclick="clearAttendanceLog()" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Search -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Search Student / ID</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                            <input type="text" id="search-attendance" onkeyup="filterAttendanceTable()" placeholder="Name or Student ID..." class="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Filter Class</label>
+                        <select id="filter-class" onchange="filterAttendanceTable()" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Filter Course</label>
+                        <select id="filter-course" onchange="filterAttendanceTable()" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                            <option value="">All Courses</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Roster Table -->
+                <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-100 text-slate-700 font-semibold uppercase text-xs tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-4">Time</th>
+                                <th class="py-3 px-4">Student ID</th>
+                                <th class="py-3 px-4">Student Name</th>
+                                <th class="py-3 px-4">Class</th>
+                                <th class="py-3 px-4">Mobile & Email</th>
+                                <th class="py-3 px-4">Course</th>
+                                <th class="py-3 px-4 text-right">Excusal PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-table-body" class="divide-y divide-slate-200">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state -->
+                <div id="empty-attendance-msg" class="hidden text-center py-12">
+                    <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-2"></i>
+                    <p class="text-slate-500 text-sm">No student check-in records found matching criteria.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- ==================== MODAL: SUCCESS PDF PREVIEW & DISTRIBUTION ==================== -->
+    <div id="pdf-preview-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="bg-slate-100 rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-300 my-8 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="bg-indigo-900 text-white p-5 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+                    <div>
+                        <h3 class="font-bold text-base">Check-In Successful!</h3>
+                        <p class="text-xs text-indigo-200">Official Excuse Letter Generated Below</p>
+                    </div>
+                </div>
+                <button onclick="closePdfModal()" class="text-indigo-200 hover:text-white p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- PDF Container Content View -->
+            <div class="p-6 overflow-y-auto flex-1 flex justify-center">
+                
+                <!-- PDF Letter Paper Element -->
+                <div id="pdf-excusal-document" class="bg-white text-slate-900 border border-slate-300 rounded-xl shadow-xl p-8 sm:p-10 w-full max-w-[620px] min-h-[720px] flex flex-col justify-between relative text-xs">
+                    
+                    <div>
+                        <!-- Header / Crest -->
+                        <div class="border-b-2 border-indigo-950 pb-4 mb-5 flex justify-between items-start">
+                            <div>
+                                <h2 class="font-serif-header text-xl font-bold text-indigo-950 uppercase tracking-wide">ST. JUDE ACADEMY</h2>
+                                <p class="text-[10px] text-slate-500 mt-0.5">100 Education Boulevard • Contact: +65 6789 0000</p>
+                                <p class="text-[10px] text-indigo-800 font-bold mt-0.5 tracking-wider">OFFICE OF ACADEMIC AFFAIRS</p>
+                            </div>
+                            <div class="w-10 h-10 bg-indigo-950 text-white rounded-full flex items-center justify-center text-base font-bold font-serif-header shadow">
+                                SJ
+                            </div>
+                        </div>
+
+                        <!-- Document Title -->
+                        <div class="text-center my-4">
+                            <h3 class="text-base font-bold uppercase tracking-widest text-slate-800 underline decoration-indigo-600 underline-offset-4">OFFICIAL CLASS EXCUSAL LETTER</h3>
+                            <p class="text-[10px] text-slate-500 mt-1">Ref No: <span id="pdf-ref-no" class="font-mono">EXC-2026-9081</span></p>
+                        </div>
+
+                        <!-- Date & Details -->
+                        <div class="mb-5 text-slate-700 flex justify-between text-[11px]">
+                            <div>
+                                <p><strong class="text-slate-900">Issue Timestamp:</strong> <span id="pdf-issue-date">22 Oct 2026</span></p>
+                                <p><strong class="text-slate-900">Course / Subject:</strong> <span id="pdf-course-name" class="text-indigo-900 font-bold">CS101</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Student Data Box -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-5 text-[11px] grid grid-cols-2 gap-3">
+                            <div><span class="text-slate-400 text-[9px] block uppercase font-bold">STUDENT NAME</span><strong id="pdf-student-name" class="text-slate-800 text-xs">Johnathan Doe</strong></div>
+                            <div><span class="text-slate-400 text-[9px] block uppercase font-bold">STUDENT ID</span><strong id="pdf-student-id" class="text-slate-800 text-xs">S10294</strong></div>
+                            <div><span class="text-slate-400 text-[9px] block uppercase font-bold">CLASS / GRADE</span><strong id="pdf-student-class" class="text-slate-800 text-xs">Class 4-B</strong></div>
+                            <div><span class="text-slate-400 text-[9px] block uppercase font-bold">MOBILE NUMBER</span><strong id="pdf-student-mobile" class="text-slate-800 text-xs">+65 9123 4567</strong></div>
+                            <div class="col-span-2"><span class="text-slate-400 text-[9px] block uppercase font-bold">EMAIL ADDRESS</span><strong id="pdf-student-email" class="text-slate-800 text-xs">john@student.edu</strong></div>
+                        </div>
+
+                        <!-- Statement Body -->
+                        <div class="space-y-3 text-[11px] text-slate-800 leading-relaxed">
+                            <p>To Whom It May Concern,</p>
+                            <p>
+                                This document certifies that the student listed above has successfully registered attendance and submitted an official excusal request for the academic session held on <strong id="pdf-body-date">22 Oct 2026</strong>.
+                            </p>
+                            <p>
+                                <strong>Stated Reason for Excusal:</strong><br>
+                                <span id="pdf-body-reason" class="italic text-slate-700 bg-amber-50 p-2 rounded-lg block border-l-2 border-amber-400 mt-1">Attending urgent medical consultation.</span>
+                            </p>
+                            <p>
+                                The student is advised to coordinate with their course instructor to catch up on any missed lectures or course assignments.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Signatures & Stamp -->
+                    <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-end">
+                        <div>
+                            <div id="pdf-signature-text" class="font-serif-header italic text-indigo-900 text-sm mb-0.5 border-b border-slate-300 pb-0.5 inline-block min-w-[150px]">
+                                Prof. Alan Turing
+                            </div>
+                            <p id="pdf-instructor-name" class="font-bold text-[10px] text-slate-800">Prof. Alan Turing</p>
+                            <p class="text-[9px] text-slate-500">Course Lecturer / Authorized Signatory</p>
+                        </div>
+
+                        <!-- Stamp Visual -->
+                        <div class="letter-stamp border-indigo-900 text-indigo-900 rounded-full w-20 h-20 flex flex-col items-center justify-center text-center p-1 opacity-90">
+                            <i class="fa-solid fa-stamp text-[10px] mb-0.5"></i>
+                            <span class="text-[8px] font-bold uppercase tracking-tight">Official Seal</span>
+                            <span class="text-[7px] text-slate-500">VERIFIED</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Modal Action Footer -->
+            <div class="bg-white p-4 border-t border-slate-200 flex flex-wrap gap-2 justify-between items-center shrink-0">
+                <button onclick="closePdfModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Close</button>
+                <div class="flex gap-2">
+                    <button onclick="emailPDFToStudent()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-envelope"></i> Send via Email
+                    </button>
+                    <button onclick="downloadGeneratedPDF()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-md transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Download PDF Letter
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ==================== MODAL: SESSION / KIOSK CONFIGURATION ==================== -->
+    <div id="config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-indigo-950 text-white p-5 flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Configure Session Details</h3>
+                <button onclick="toggleSessionConfigModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveSessionConfig(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Course / Subject Name</label>
+                    <input type="text" id="cfg-course" required value="CS101: Computer Science Fundamentals" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Instructor Name</label>
+                    <input type="text" id="cfg-instructor" required value="Prof. Alan Turing" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Room / Venue</label>
+                    <input type="text" id="cfg-room" required value="Lecture Hall 3B" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="toggleSessionConfigModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">Save & Update QR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // Active Session Settings
+        let sessionConfig = {
+            course: "CS101: Computer Science Fundamentals",
+            instructor: "Prof. Alan Turing",
+            room: "Lecture Hall 3B",
+            datetime: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ", 09:00 AM"
+        };
+
+        // Attendance Roster Log State
+        let attendanceLog = [
+            {
+                timestamp: "09:02 AM",
+                id: "S1001",
+                name: "Alex Tan",
+                class: "Class 4-A",
+                mobile: "+65 9123 4567",
+                email: "alex.tan@student.edu",
+                course: "CS101: Computer Science Fundamentals",
+                reason: "Medical Appointment / Medical Leave",
+                reasonDetails: "Doctor consultation appointment at National Clinic."
+            },
+            {
+                timestamp: "09:05 AM",
+                id: "S1002",
+                name: "Sarah Jenkins",
+                class: "Class 4-B",
+                mobile: "+65 9876 5432",
+                email: "sarah.j@student.edu",
+                course: "CS101: Computer Science Fundamentals",
+                reason: "Official School Representation",
+                reasonDetails: "Representing school in Inter-College Robotics Competition."
+            },
+            {
+                timestamp: "09:12 AM",
+                id: "S1003",
+                name: "Marcus Chen",
+                class: "Class 3-C",
+                mobile: "+65 8111 2222",
+                email: "marcus.c@student.edu",
+                course: "CS101: Computer Science Fundamentals",
+                reason: "Family Emergency / Personal Matter",
+                reasonDetails: "Urgent family emergency matters."
+            }
+        ];
+
+        let currentActivePdfRecord = null;
+        let qrCodeObj = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            renderKioskQR();
+            renderAttendanceTable();
+            updateFilterDropdowns();
+        });
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-800', 'text-white', 'shadow-sm');
+                btn.classList.add('text-indigo-200');
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-800', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('text-indigo-200');
+            }
+
+            document.getElementById('mobile-menu').classList.add('hidden');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // ==================== KIOSK & QR GENERATION ====================
+        function renderKioskQR() {
+            const qrContainer = document.getElementById('kiosk-qr-code');
+            qrContainer.innerHTML = '';
+
+            // Direct URL point for student form (Simulated shareable web link)
+            const formUrl = window.location.href.split('#')[0] + '?session=' + encodeURIComponent(sessionConfig.course);
+
+            document.getElementById('portal-link-input').value = formUrl;
+
+            qrCodeObj = new QRCode(qrContainer, {
+                text: formUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#1e1b4b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function toggleSessionConfigModal() {
+            document.getElementById('config-modal').classList.toggle('hidden');
+        }
+
+        function saveSessionConfig(e) {
+            e.preventDefault();
+            sessionConfig.course = document.getElementById('cfg-course').value;
+            sessionConfig.instructor = document.getElementById('cfg-instructor').value;
+            sessionConfig.room = document.getElementById('cfg-room').value;
+
+            // Update UI elements
+            document.getElementById('kiosk-display-course').innerText = sessionConfig.course;
+            document.getElementById('kiosk-display-instructor').innerText = sessionConfig.instructor;
+            document.getElementById('kiosk-display-room').innerText = sessionConfig.room;
+
+            document.getElementById('form-session-title').innerText = sessionConfig.course;
+            document.getElementById('form-session-instructor').innerText = sessionConfig.instructor;
+
+            renderKioskQR();
+            toggleSessionConfigModal();
+            showToast("Session config updated & QR refreshed!", "success");
+        }
+
+        function copyPortalLink() {
+            const input = document.getElementById('portal-link-input');
+            input.select();
+            document.execCommand('copy');
+            showToast("Portal link copied to clipboard!", "info");
+        }
+
+        // ==================== STUDENT FORM SUBMISSION ====================
+        function toggleCustomReasonInput() {
+            const selectVal = document.getElementById('student-reason-select').value;
+            const textarea = document.getElementById('student-reason-text');
+            if (selectVal !== "Custom Reason") {
+                textarea.value = `Attending ${selectVal}. Officially submitted check-in request.`;
+            }
+        }
+
+        function handleStudentFormSubmit(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('student-name').value;
+            const id = document.getElementById('student-id').value;
+            const className = document.getElementById('student-class').value;
+            const mobile = document.getElementById('student-mobile').value;
+            const email = document.getElementById('student-email').value;
+            const reasonType = document.getElementById('student-reason-select').value;
+            const reasonDetails = document.getElementById('student-reason-text').value;
+
+            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const newRecord = {
+                timestamp: timeNow,
+                id,
+                name,
+                class: className,
+                mobile,
+                email,
+                course: sessionConfig.course,
+                reason: reasonType,
+                reasonDetails
+            };
+
+            // Record into log
+            attendanceLog.unshift(newRecord);
+
+            renderAttendanceTable();
+            updateFilterDropdowns();
+
+            // Populate & Trigger PDF Modal
+            openPdfModalFor(newRecord);
+            showToast(`Check-in recorded for ${name}!`, "success");
+
+            // Reset form
+            document.getElementById('student-checkin-form').reset();
+            toggleCustomReasonInput();
+        }
+
+
+        // ==================== ADMIN DASHBOARD & ROSTER ====================
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendance-table-body');
+            const emptyMsg = document.getElementById('empty-attendance-msg');
+            tbody.innerHTML = '';
+
+            const searchVal = document.getElementById('search-attendance')?.value.toLowerCase() || '';
+            const classFilter = document.getElementById('filter-class')?.value || '';
+            const courseFilter = document.getElementById('filter-course')?.value || '';
+
+            const filtered = attendanceLog.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchVal) || item.id.toLowerCase().includes(searchVal);
+                const matchesClass = !classFilter || item.class === classFilter;
+                const matchesCourse = !courseFilter || item.course === courseFilter;
+                return matchesSearch && matchesClass && matchesCourse;
+            });
+
+            // Update badge counts
+            document.getElementById('attendance-count-badge').innerText = attendanceLog.length;
+            document.getElementById('mobile-attendance-count-badge').innerText = attendanceLog.length;
+
+            if (filtered.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            } else {
+                emptyMsg.classList.add('hidden');
+            }
+
+            filtered.forEach((rec, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${rec.timestamp}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-700 text-xs">${rec.id}</td>
+                    <td class="py-3 px-4 font-bold text-slate-800">${rec.name}</td>
+                    <td class="py-3 px-4 text-xs">${rec.class}</td>
+                    <td class="py-3 px-4 text-xs text-slate-500">
+                        <div>${rec.mobile}</div>
+                        <div class="text-[10px] text-slate-400">${rec.email}</div>
+                    </td>
+                    <td class="py-3 px-4 text-xs font-medium text-indigo-900">${rec.course}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick='openPdfModalForIndex(${index})' class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition border border-indigo-200">
+                            <i class="fa-solid fa-file-pdf"></i> View Letter
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterAttendanceTable() {
+            renderAttendanceTable();
+        }
+
+        function updateFilterDropdowns() {
+            const classSelect = document.getElementById('filter-class');
+            const courseSelect = document.getElementById('filter-course');
+
+            const classes = [...new Set(attendanceLog.map(i => i.class))];
+            const courses = [...new Set(attendanceLog.map(i => i.course))];
+
+            if (classSelect) {
+                const curr = classSelect.value;
+                classSelect.innerHTML = '<option value="">All Classes</option>';
+                classes.forEach(c => classSelect.innerHTML += `<option value="${c}">${c}</option>`);
+                classSelect.value = curr;
+            }
+
+            if (courseSelect) {
+                const curr = courseSelect.value;
+                courseSelect.innerHTML = '<option value="">All Courses</option>';
+                courses.forEach(c => courseSelect.innerHTML += `<option value="${c}">${c}</option>`);
+                courseSelect.value = curr;
+            }
+        }
+
+        function clearAttendanceLog() {
+            if (confirm("Are you sure you want to clear all recorded check-ins?")) {
+                attendanceLog = [];
+                renderAttendanceTable();
+                updateFilterDropdowns();
+                showToast("Roster log cleared.", "info");
+            }
+        }
+
+        function exportToCSV() {
+            if (attendanceLog.length === 0) {
+                showToast("No attendance data to export.", "error");
+                return;
+            }
+            let csv = "data:text/csv;charset=utf-8,Time,Student ID,Name,Class,Mobile,Email,Course,Reason\n";
+            attendanceLog.forEach(r => {
+                csv += `"${r.timestamp}","${r.id}","${r.name}","${r.class}","${r.mobile}","${r.email}","${r.course}","${r.reasonDetails}"\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csv));
+            link.setAttribute("download", `Attendance_Log_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+
+        // ==================== PDF EXCUSAL LETTER GENERATOR ====================
+        function openPdfModalForIndex(index) {
+            openPdfModalFor(attendanceLog[index]);
+        }
+
+        function openPdfModalFor(record) {
+            currentActivePdfRecord = record;
+
+            // Generate unique reference ID
+            const refNo = "EXC-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('pdf-ref-no').innerText = refNo;
+
+            document.getElementById('pdf-issue-date').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + " " + record.timestamp;
+            document.getElementById('pdf-course-name').innerText = record.course;
+
+            document.getElementById('pdf-student-name').innerText = record.name;
+            document.getElementById('pdf-student-id').innerText = record.id;
+            document.getElementById('pdf-student-class').innerText = record.class;
+            document.getElementById('pdf-student-mobile').innerText = record.mobile;
+            document.getElementById('pdf-student-email').innerText = record.email;
+
+            document.getElementById('pdf-body-date').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            document.getElementById('pdf-body-reason').innerText = record.reasonDetails;
+
+            document.getElementById('pdf-instructor-name').innerText = sessionConfig.instructor;
+            document.getElementById('pdf-signature-text').innerText = sessionConfig.instructor;
+
+            document.getElementById('pdf-preview-modal').classList.remove('hidden');
+        }
+
+        function closePdfModal() {
+            document.getElementById('pdf-preview-modal').classList.add('hidden');
+        }
+
+        function downloadGeneratedPDF() {
+            if (!currentActivePdfRecord) return;
+
+            const element = document.getElementById('pdf-excusal-document');
+            const studentName = currentActivePdfRecord.name || 'Student';
+
+            const opt = {
+                margin:       [0.2, 0.2, 0.2, 0.2],
+                filename:     `Excuse_Letter_${studentName.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            showToast("Downloading PDF...", "info");
+            html2pdf().set(opt).from(element).save().then(() => {
+                showToast("PDF downloaded successfully!", "success");
+            });
+        }
+
+        function emailPDFToStudent() {
+            if (!currentActivePdfRecord) return;
+
+            const to = currentActivePdfRecord.email;
+            const subject = encodeURIComponent(`Official Excusal Letter - ${currentActivePdfRecord.name} (${currentActivePdfRecord.course})`);
+            const body = encodeURIComponent(
+                `Dear ${currentActivePdfRecord.name},\n\nYour attendance check-in and excusal request for ${currentActivePdfRecord.course} has been officially recorded.\n\nDetails:\n- Student ID: ${currentActivePdfRecord.id}\n- Class: ${currentActivePdfRecord.class}\n- Reason: ${currentActivePdfRecord.reasonDetails}\n\nYour formal Excusal Letter is attached / available in the portal.\n\nBest regards,\nOffice of Academic Affairs`
+            );
+
+            window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+            showToast("Opening email client...", "info");
+        }
+
+
+        // ==================== UTILITY TOAST NOTIFICATIONS ====================
+        function showToast(message, type = "info") {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgColor = "bg-slate-800 text-white";
+            let icon = '<i class="fa-solid fa-circle-info text-blue-400"></i>';
+
+            if (type === "success") {
+                bgColor = "bg-emerald-900 text-emerald-100 border border-emerald-700";
+                icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            } else if (type === "error") {
+                bgColor = "bg-red-900 text-red-100 border border-red-700";
+                icon = '<i class="fa-solid fa-triangle-exclamation text-red-400"></i>';
+            }
+
+            toast.className = `p-3 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 transition-all transform translate-y-2 pointer-events-auto ${bgColor}`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
