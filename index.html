@@ -40,7 +40,7 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                 <div>
                     <h2 class="text-lg font-semibold mb-1">Live Session QR Code & Custom Leave Settings</h2>
-                    <p class="text-sm text-slate-600">Configure the session details below. When students scan the QR code, these details are automatically locked into their check-in and PDF leave form.</p>
+                    <p class="text-sm text-slate-600">Configure your session details below and click <strong>"Generate QR Code"</strong> when you are ready to display it on your projector.</p>
                 </div>
 
                 <!-- Admin Custom Session Settings Form -->
@@ -49,17 +49,17 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Function / Reason Name (Editable):</label>
-                            <input type="text" id="admin-reason" value="Official School Event / CCA" oninput="updateStudentUrl()" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Function / Reason Name:</label>
+                            <input type="text" id="admin-reason" value="Official School Event / CCA" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Time From:</label>
-                                <input type="text" id="admin-time-from" value="08:30 AM" oninput="updateStudentUrl()" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <input type="text" id="admin-time-from" value="08:30 AM" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Time To:</label>
-                                <input type="text" id="admin-time-to" value="05:30 PM" oninput="updateStudentUrl()" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <input type="text" id="admin-time-to" value="05:30 PM" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             </div>
                         </div>
                     </div>
@@ -67,12 +67,19 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Approving Lecturer:</label>
-                            <input type="text" id="admin-lecturer" value="Dr. John Tan" oninput="updateStudentUrl()" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <input type="text" id="admin-lecturer" value="Dr. John Tan" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Approving Lecturer Contact Number:</label>
-                            <input type="text" id="admin-contact" value="+65 6590 2000" oninput="updateStudentUrl()" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <input type="text" id="admin-contact" value="+65 6590 2000" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
+                    </div>
+
+                    <!-- Manual Generate Button -->
+                    <div class="pt-2">
+                        <button onclick="generateQRCode()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow transition flex items-center gap-2">
+                            🖨️ Generate QR Code & Link
+                        </button>
                     </div>
                 </div>
                 
@@ -82,7 +89,7 @@
                     </div>
                     <div class="space-y-4 flex-1 w-full">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Student Form URL (Auto-embedded with settings)</label>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Student Form URL</label>
                             <div class="flex gap-2">
                                 <input type="text" id="student-url-display" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-xs font-mono text-slate-600">
                                 <button onclick="copyStudentUrl()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg transition">Copy</button>
@@ -261,18 +268,16 @@
     <script>
         // Initialize App & Routing
         window.addEventListener('DOMContentLoaded', () => {
-            updateStudentUrl();
-
-            // Check URL hash for direct view loading
             if (window.location.hash.startsWith('#student')) {
                 switchView('student');
             } else {
                 switchView('admin');
+                generateQRCode(); // generate initial QR on load
                 fetchAttendance();
             }
         });
 
-        function updateStudentUrl() {
+        function generateQRCode() {
             const reason = document.getElementById('admin-reason').value;
             const timeFrom = document.getElementById('admin-time-from').value;
             const timeTo = document.getElementById('admin-time-to').value;
@@ -291,7 +296,7 @@
             const studentUrl = `${baseUrl}#student?${params.toString()}`;
             document.getElementById('student-url-display').value = studentUrl;
 
-            // Re-generate QR Code
+            // Re-generate QR Code only when button is clicked
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
                 text: studentUrl,
@@ -301,6 +306,7 @@
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
+            alert("QR Code updated successfully with current settings!");
         }
 
         function switchView(view) {
