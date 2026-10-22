@@ -634,7 +634,6 @@ async function fetchAttendance() {
     const r = await fetch(`${CONFIG.GOOGLE_CSV_URL}&_=${Date.now()}`, { cache: 'no-store' });
     if (!r.ok) throw Error(`CSV request failed (${r.status})`);
     
-    // Parse CSV rows: [0] Timestamp, [1] Pass ID, [2] Name, [3] Class, [4] Mobile, [5] Email, [6] Reason...
     attendanceRows = parseCSV(await r.text()).slice(1).filter(x => x.length >= 6 && x[1]).reverse();
     b.replaceChildren();
     
