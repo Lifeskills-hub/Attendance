@@ -243,12 +243,21 @@
     </div>
 
     <script>
+        // Helper to parse URL parameters safely from hash (e.g. #student?reason=...&from=...)
+        function getURLParams() {
+            const hash = window.location.hash;
+            const queryIndex = hash.indexOf('?');
+            if (queryIndex !== -1) {
+                return new URLSearchParams(hash.substring(queryIndex + 1));
+            }
+            return new URLSearchParams();
+        }
+
         // Initialize App & Routing with Password Check for Admin
         window.addEventListener('DOMContentLoaded', () => {
             if (window.location.hash.startsWith('#student')) {
                 switchView('student');
             } else {
-                // Prompt password for admin view on initial load
                 verifyAdminPassword(true);
             }
         });
@@ -268,7 +277,6 @@
                     alert("Incorrect password!");
                 }
                 if (isInitialLoad) {
-                    // If they failed or cancelled on initial load, default to student preview
                     switchView('student');
                 }
             }
@@ -322,12 +330,12 @@
                 studentView.classList.remove('hidden');
                 if (navButtons) navButtons.style.display = 'none';
 
-                // Extract parameters from URL hash
-                const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-                document.getElementById('display-locked-reason').textContent = urlParams.get('reason') || document.getElementById('admin-reason').value;
-                document.getElementById('display-locked-time').textContent = (urlParams.get('from') || '08:30 AM') + ' to ' + (urlParams.get('to') || '05:30 PM');
-                document.getElementById('display-locked-lecturer').textContent = urlParams.get('lecturer') || document.getElementById('admin-lecturer').value;
-                document.getElementById('display-locked-contact').textContent = urlParams.get('contact') || document.getElementById('admin-contact').value;
+                // Extract parameters using robust helper
+                const params = getURLParams();
+                document.getElementById('display-locked-reason').textContent = params.get('reason') || document.getElementById('admin-reason').value;
+                document.getElementById('display-locked-time').textContent = (params.get('from') || '08:30 AM') + ' to ' + (params.get('to') || '05:30 PM');
+                document.getElementById('display-locked-lecturer').textContent = params.get('lecturer') || document.getElementById('admin-lecturer').value;
+                document.getElementById('display-locked-contact').textContent = params.get('contact') || document.getElementById('admin-contact').value;
             }
         }
 
@@ -357,12 +365,12 @@
             btn.disabled = true;
             btn.textContent = "Processing & Generating Official PDF...";
 
-            const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-            const reason = urlParams.get('reason') || document.getElementById('admin-reason').value;
-            const timeFrom = urlParams.get('from') || document.getElementById('admin-time-from').value;
-            const timeTo = urlParams.get('to') || document.getElementById('admin-time-to').value;
-            const lecturer = urlParams.get('lecturer') || document.getElementById('admin-lecturer').value;
-            const contact = urlParams.get('contact') || document.getElementById('admin-contact').value;
+            const params = getURLParams();
+            const reason = params.get('reason') || document.getElementById('admin-reason').value;
+            const timeFrom = params.get('from') || document.getElementById('admin-time-from').value;
+            const timeTo = params.get('to') || document.getElementById('admin-time-to').value;
+            const lecturer = params.get('lecturer') || document.getElementById('admin-lecturer').value;
+            const contact = params.get('contact') || document.getElementById('admin-contact').value;
 
             const formData = {
                 name: document.getElementById('name').value,
@@ -373,7 +381,7 @@
                 reason: reason
             };
 
-            // Populate official PDF template
+            // Populate official PDF template accurately
             document.getElementById('pdf-name').textContent = formData.name;
             document.getElementById('pdf-class').textContent = formData.studentClass;
             document.getElementById('pdf-nric').textContent = formData.nric;
