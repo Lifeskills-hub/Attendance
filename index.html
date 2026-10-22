@@ -140,13 +140,15 @@
       <label class="block text-sm font-medium">Full Name
         <input id="name" maxlength="100" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
       </label>
-      <label class="block text-sm font-medium">Class / Section
-        <input id="studentClass" maxlength="40" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
-      </label>
       <div class="grid sm:grid-cols-2 gap-4">
+        <label class="text-sm font-medium">Class / Section
+          <input id="studentClass" maxlength="40" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
+        </label>
         <label class="text-sm font-medium">Mobile Number
           <input type="tel" id="mobile" maxlength="30" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
         </label>
+      </div>
+      <div>
         <label class="text-sm font-medium">Email Address
           <input type="email" id="email" maxlength="120" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
         </label>
@@ -224,7 +226,7 @@
     <div style="border:1.5px solid #000;width:100%;overflow:hidden">
       <div style="background:#e2e8f0;padding:7px 9px;font-weight:bold;border-bottom:1px solid #000">Part A: To be completed by students</div>
       <div style="display:grid;grid-template-columns:120px minmax(0,1fr) 120px minmax(0,1fr)">
-        <div class="pfl">Name:</div><div class="pfv span3" id="pdf-name">-</div>
+        <div class="pfl">Name:</div><div class="pfv span3 lastcol" id="pdf-name">-</div>
         <div class="pfl">Class:</div><div class="pfv" id="pdf-class">-</div>
         <div class="pfl">Date of Leave:</div><div class="pfv lastcol" id="pdf-date">-</div>
         <div class="pfl">Time:</div><div class="pfv span3">From <b id="pdf-time-from">-</b> To <b id="pdf-time-to">-</b></div>
@@ -266,7 +268,7 @@
 <script>
 'use strict';
 const CONFIG = {
-  GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxAue_iHKiWZfwOh1RT68NbpPdH0z5eeN8EBi3av-Dk2zhOoFNvfle-mqRUtu9vR3cY/exec',
+  GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyBWwEdOiEpi6b6kpkO_jnnbg1h9EBEf0IWTnrYIkB0ByNGyDFST6qadXkR6F7OdQnl/exec',
   GOOGLE_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv',
   ADMIN_PASSWORD: 'Life$kills'
 };
@@ -632,7 +634,8 @@ async function fetchAttendance() {
     const r = await fetch(`${CONFIG.GOOGLE_CSV_URL}&_=${Date.now()}`, { cache: 'no-store' });
     if (!r.ok) throw Error(`CSV request failed (${r.status})`);
     
-    attendanceRows = parseCSV(await r.text()).slice(1).filter(x => x.length >= 7 && x[1]).reverse();
+    // Parse CSV rows: [0] Timestamp, [1] Pass ID, [2] Name, [3] Class, [4] Mobile, [5] Email, [6] Reason...
+    attendanceRows = parseCSV(await r.text()).slice(1).filter(x => x.length >= 6 && x[1]).reverse();
     b.replaceChildren();
     
     if (!attendanceRows.length) {
@@ -667,7 +670,7 @@ async function verifyPass() {
     try {
       const r = await fetch(`${CONFIG.GOOGLE_CSV_URL}&_=${Date.now()}`, { cache: 'no-store' });
       if (r.ok) {
-        attendanceRows = parseCSV(await r.text()).slice(1).filter(x => x.length >= 7 && x[1]);
+        attendanceRows = parseCSV(await r.text()).slice(1).filter(x => x.length >= 6 && x[1]);
       }
     } catch (e) { console.error(e); }
   }
@@ -719,4 +722,53 @@ function excel() {
   const ws = XLSX.utils.aoa_to_sheet([h, ...attendanceRows.map(r => h.map((_, i) => r[i] || ''))]);
   ws['!cols'] = [{ wch: 20 }, { wch: 18 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 28 }, { wch: 32 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 28 }, { wch: 18 }, { wch: 16 }];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+  XLSX.writeFile(wb, `ITE_Attendance_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  status('Attendance Excel file downloaded.', 'success');
+}
+
+function handleRouting() {
+  if (location.hash.startsWith('#verify')) {
+    verifyPass();
+  } else if (location.hash.startsWith('#student')) {
+    switchView('student');
+  } else {
+    admin(false);
+  }
+}
+
+// Event Listeners
+$('nav-admin').onclick = () => admin(false);
+$('preview-student').onclick = preview;
+$('generate-qr').onclick = () => generate(true);
+$('present-qr').onclick = present;
+$('download-qr').onclick = downloadQR;
+$('download-qr-modal').onclick = downloadQR;
+$('close-qr').onclick = closeQR;
+$('copy-url').onclick = copyUrl;
+$('refresh').onclick = fetchAttendance;
+$('export-excel').onclick = excel;
+$('attendance-form').onsubmit = submit;
+$('verify-back-admin').onclick = () => { location.hash = '#admin'; };
+
+window.addEventListener('hashchange', handleRouting);
+window.addEventListener('DOMContentLoaded', () => {
+  if (!$('admin-date').value) $('admin-date').value = new Date().toISOString().slice(0, 10);
+  load();
+  loadStudentDraft();
+  ['admin-reason', 'admin-date', 'admin-time-from', 'admin-time-to', 'admin-lecturer', 'admin-department', 'admin-subdepartment', 'admin-contact'].forEach(id => {
+    $(id).addEventListener('input', save);
+    $(id).addEventListener('change', save);
+    $(id).addEventListener('blur', save);
+  });
+  ['name', 'studentClass', 'mobile', 'email'].forEach(id => {
+    $(id).addEventListener('input', saveStudentDraft);
+    $(id).addEventListener('change', saveStudentDraft);
+    $(id).addEventListener('blur', saveStudentDraft);
+  });
+  handleRouting();
+});
+window.addEventListener('beforeunload', () => { save(); saveStudentDraft(); });
+</script>
+</body>
+</html>
