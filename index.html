@@ -149,8 +149,8 @@
                         <input type="text" id="studentClass" placeholder="e.g. DIT/1A/01" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">NRIC No. / Student ID</label>
-                        <input type="text" id="nric" placeholder="e.g. T1234567A" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Student ID</label>
+                        <input type="text" id="nric" placeholder="e.g. 1234567" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -180,7 +180,7 @@
 
     </main>
 
-    <!-- ================= OFFICIAL ITE PDF TEMPLATE ================= -->
+    <!-- ================= OFFICIAL ITE PDF TEMPLATE (PART B REMOVED) ================= -->
     <div id="pdf-template" class="hidden">
         <div style="padding: 30px; font-family: Arial, sans-serif; color: #000000; max-width: 800px; margin: 0 auto; background: #ffffff; font-size: 13px; line-height: 1.4;">
             
@@ -195,13 +195,13 @@
                 Part A: To be completed by students
             </div>
 
-            <!-- Student Info Table -->
+            <!-- Student Info Table (Student ID updated) -->
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
                 <tr>
                     <td style="padding: 6px; border: 1px solid #000; width: 20%; font-weight: bold;">Name:</td>
                     <td style="padding: 6px; border: 1px solid #000; width: 40%;" id="pdf-name">-</td>
-                    <td style="padding: 6px; border: 1px solid #000; width: 15%; font-weight: bold;">NRIC No:</td>
-                    <td style="padding: 6px; border: 1px solid #000; width: 25%;" id="pdf-nric">-</td>
+                    <td style="padding: 6px; border: 1px solid #000; width: 18%; font-weight: bold;">Student ID:</td>
+                    <td style="padding: 6px; border: 1px solid #000; width: 22%;" id="pdf-nric">-</td>
                 </tr>
                 <tr>
                     <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Class:</td>
@@ -220,46 +220,22 @@
             </table>
 
             <!-- Reason for Leave Section -->
-            <div style="margin-bottom: 15px; border: 1px solid #000; padding: 10px;">
-                <div style="font-weight: bold; margin-bottom: 8px;">Reason for Leave:</div>
-                <div style="margin-bottom: 5px;">☒ Others / Official Function: <span id="pdf-reason" style="font-weight: bold; text-decoration: underline;">-</span></div>
-            </div>
-
-            <div style="margin-bottom: 25px;">
-                <div>Name of Approving Lecturer: <span id="pdf-lecturer" style="font-weight: bold;">-</span> (<span id="pdf-contact">-</span>)</div>
-            </div>
-
-            <!-- Part B Header -->
-            <div style="background: #e2e8f0; padding: 5px 10px; font-weight: bold; font-size: 12px; border: 1px solid #000; margin-bottom: 10px;">
-                Part B: To be completed by staff
-            </div>
-
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #000; width: 30%; font-weight: bold;">Approval of leave:</td>
-                    <td style="padding: 8px; border: 1px solid #000;">☒ Yes &nbsp;&nbsp;&nbsp; ☐ No</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #000; font-weight: bold;">Leave is approved subject to:</td>
-                    <td style="padding: 8px; border: 1px solid #000; font-size: 12px;">
-                        ☐ Produce medical certificate/time chit<br>
-                        ☐ Produce documentary proof<br>
-                        ☐ Produce parent's letter<br>
-                        ☒ Others: Verified via Digital Attendance System QR Check-in
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #000; font-weight: bold;">Comments:</td>
-                    <td style="padding: 8px; border: 1px solid #000; color: #475569;">Auto-verified attendance session check-in. Valid for class excusal.</td>
+                    <td style="padding: 8px; border: 1px solid #000; font-weight: bold; width: 30%;">Reason for Leave:</td>
+                    <td style="padding: 8px; border: 1px solid #000;">☒ Others / Official Function: <span id="pdf-reason" style="font-weight: bold; text-decoration: underline;">-</span></td>
                 </tr>
             </table>
 
-            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                <div>Date: <span id="pdf-timestamp">-</span></div>
-                <div>Name & Signature of Staff: <span id="pdf-staff-sign" style="font-weight: bold;">-</span></div>
-            </div>
+            <!-- Approving Lecturer Info -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #000; width: 30%; font-weight: bold;">Approving Lecturer:</td>
+                    <td style="padding: 8px; border: 1px solid #000;"><span id="pdf-lecturer" style="font-weight: bold;">-</span> (Contact: <span id="pdf-contact">-</span>)</td>
+                </tr>
+            </table>
 
-            <div style="margin-top: 30px; border-top: 1px dashed #94a3b8; padding-top: 10px; font-size: 11px; color: #64748b; text-align: center;">
+            <div style="margin-top: 40px; border-top: 1px dashed #94a3b8; padding-top: 10px; font-size: 11px; color: #64748b; text-align: center;">
                 Note: Forms should be submitted to Class Advisor for follow-up action. Generated securely via ITE Digital Portal.
             </div>
         </div>
@@ -383,13 +359,11 @@
             document.getElementById('pdf-mobile').textContent = formData.mobile;
             document.getElementById('pdf-email').textContent = formData.email;
             document.getElementById('pdf-date').textContent = new Date().toLocaleDateString();
-            document.getElementById('pdf-timestamp').textContent = new Date().toLocaleString();
             document.getElementById('pdf-reason').textContent = formData.reason;
             document.getElementById('pdf-time-from').textContent = timeFrom;
             document.getElementById('pdf-time-to').textContent = timeTo;
             document.getElementById('pdf-lecturer').textContent = lecturer;
             document.getElementById('pdf-contact').textContent = contact;
-            document.getElementById('pdf-staff-sign').textContent = lecturer;
 
             // Send to Google Sheets via Apps Script
             if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("YOUR_")) {
