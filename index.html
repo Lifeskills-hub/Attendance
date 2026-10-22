@@ -183,24 +183,24 @@
 
     <!-- ================= OFFICIAL ITE PDF TEMPLATE ================= -->
     <div id="pdf-template" class="hidden">
-        <div style="padding: 30px; font-family: Arial, sans-serif; color: #000000; max-width: 800px; margin: 0 auto; background: #ffffff; font-size: 13px; line-height: 1.4;">
+        <div style="padding: 25px; font-family: Arial, sans-serif; color: #000000; max-width: 800px; margin: 0 auto; background: #ffffff; font-size: 13px; line-height: 1.5;">
             
             <!-- Header -->
-            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
                 <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px;">ITE COLLEGE WEST</div>
                 <h1 style="font-size: 18px; font-weight: bold; margin: 5px 0;">STUDENT LEAVE FORM</h1>
             </div>
 
             <!-- Part A Header -->
-            <div style="background: #e2e8f0; padding: 5px 10px; font-weight: bold; font-size: 12px; border: 1px solid #000; margin-bottom: 10px;">
+            <div style="background: #e2e8f0; padding: 6px 10px; font-weight: bold; font-size: 12px; border: 1px solid #000; margin-bottom: 10px;">
                 Part A: To be completed by students
             </div>
 
             <!-- Student Info Table -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
                 <tr>
-                    <td style="padding: 6px; border: 1px solid #000; width: 20%; font-weight: bold;">Name:</td>
-                    <td style="padding: 6px; border: 1px solid #000; width: 40%;" id="pdf-name">-</td>
+                    <td style="padding: 6px; border: 1px solid #000; width: 18%; font-weight: bold;">Name:</td>
+                    <td style="padding: 6px; border: 1px solid #000; width: 42%;" id="pdf-name">-</td>
                     <td style="padding: 6px; border: 1px solid #000; width: 18%; font-weight: bold;">Student ID:</td>
                     <td style="padding: 6px; border: 1px solid #000; width: 22%;" id="pdf-nric">-</td>
                 </tr>
@@ -212,7 +212,7 @@
                 </tr>
                 <tr>
                     <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Time:</td>
-                    <td style="padding: 6px; border: 1px solid #000;" colspan="3">From <span id="pdf-time-from" style="border-bottom: 1px dotted #000; padding: 0 10px;">-</span> To <span id="pdf-time-to" style="border-bottom: 1px dotted #000; padding: 0 10px;">-</span></td>
+                    <td style="padding: 6px; border: 1px solid #000;" colspan="3">From <span id="pdf-time-from" style="font-weight: bold;">-</span> To <span id="pdf-time-to" style="font-weight: bold;">-</span></td>
                 </tr>
                 <tr>
                     <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Contact Info:</td>
@@ -221,22 +221,19 @@
             </table>
 
             <!-- Reason for Leave Section -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #000; font-weight: bold; width: 30%;">Reason for Leave:</td>
-                    <td style="padding: 8px; border: 1px solid #000;">☒ Others / Official Function: <span id="pdf-reason" style="font-weight: bold; text-decoration: underline;">-</span></td>
-                </tr>
-            </table>
+            <div style="margin-bottom: 12px; border: 1px solid #000; padding: 10px;">
+                <div style="font-weight: bold; margin-bottom: 5px;">Reason for Leave:</div>
+                <div>☒ Others / Official Function: <span id="pdf-reason" style="font-weight: bold; text-decoration: underline;">-</span></div>
+            </div>
 
-            <!-- Approving Lecturer Info -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #000; width: 30%; font-weight: bold;">Approving Lecturer:</td>
-                    <td style="padding: 8px; border: 1px solid #000;"><span id="pdf-lecturer" style="font-weight: bold;">-</span> (Contact: <span id="pdf-contact">-</span>)</td>
-                </tr>
-            </table>
+            <!-- Approving Lecturer Section -->
+            <div style="margin-bottom: 25px; border: 1px solid #000; padding: 10px;">
+                <div style="font-weight: bold; margin-bottom: 5px;">Approving Lecturer Details:</div>
+                <div>Name: <span id="pdf-lecturer" style="font-weight: bold;">-</span> &nbsp;&nbsp;|&nbsp;&nbsp; Contact Number: <span id="pdf-contact" style="font-weight: bold;">-</span></div>
+            </div>
 
-            <div style="margin-top: 40px; border-top: 1px dashed #94a3b8; padding-top: 10px; font-size: 11px; color: #64748b; text-align: center;">
+            <!-- Footer Note -->
+            <div style="margin-top: 20px; border-top: 1px dashed #94a3b8; padding-top: 8px; font-size: 11px; color: #64748b; text-align: center;">
                 Note: Forms should be submitted to Class Advisor for follow-up action. Generated securely via ITE Digital Portal.
             </div>
         </div>
@@ -381,7 +378,7 @@
                 reason: reason
             };
 
-            // Populate official PDF template robustly using URL params or fallback UI text
+            // Explicitly bind values to PDF elements
             document.getElementById('pdf-name').textContent = formData.name;
             document.getElementById('pdf-class').textContent = formData.studentClass;
             document.getElementById('pdf-nric').textContent = formData.nric;
