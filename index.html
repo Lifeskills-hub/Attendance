@@ -1,540 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITE College West - Attendance & Leave System</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- QR Code Generator Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- html2pdf Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script>
-        // ==========================================
-        // YOUR CONFIGURED URLS & PASSWORDS:
-        // ==========================================
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBWwEdOiEpi6b6kpkO_jnnbg1h9EBEf0IWTnrYIkB0ByNGyDFST6qadXkR6F7OdQnl/exec";
-        const GOOGLE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv";
-        const ADMIN_PASSWORD = "Life$kills";
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>ITE College West - Attendance & Leave System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    #pdf-source { display:none; }
+    @media print { body > *:not(#pdf-render-host) { display:none!important; } }
+  </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
+<header class="bg-indigo-900 text-white shadow-md">
+  <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+    <h1 class="text-xl font-bold">🏫 ITE College West - Attendance & Leave Pass</h1>
+    <div id="nav-buttons" class="flex gap-2">
+      <button type="button" id="nav-admin" class="px-4 py-2 bg-indigo-800 hover:bg-indigo-700 rounded-lg text-sm font-medium">Admin Dashboard</button>
+      <button type="button" id="preview-student" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium">Preview Student View</button>
+    </div>
+  </div>
+</header>
 
-    <!-- Navigation / Header -->
-    <header class="bg-indigo-900 text-white shadow-md">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                🏫 ITE College West - Attendance & Leave Pass
-            </h1>
-            <div id="nav-buttons" class="flex gap-2">
-                <button onclick="requestAdminAccess()" id="nav-admin" class="px-4 py-2 bg-indigo-800 hover:bg-indigo-700 rounded-lg text-sm font-medium transition">Admin Dashboard</button>
-                <button onclick="previewStudentView()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Preview Student View</button>
-            </div>
+<main class="max-w-5xl mx-auto px-4 py-8">
+  <div id="status" role="status" aria-live="polite" class="hidden mb-4 rounded-lg px-4 py-3 text-sm"></div>
+
+  <section id="view-admin" class="space-y-6 hidden">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+      <div>
+        <h2 class="text-lg font-semibold">Live Session QR Code & Leave Settings</h2>
+        <p class="text-sm text-slate-600">Configure the session, then generate the student link.</p>
+      </div>
+      <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-xl space-y-4">
+        <h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider">Session Configuration</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="text-xs font-semibold">Function / Reason
+            <input id="admin-reason" value="Official School Event / CCA" maxlength="150" class="mt-1 w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm">
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="text-xs font-semibold">Time From
+              <input type="time" id="admin-time-from" value="08:30" class="mt-1 w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm">
+            </label>
+            <label class="text-xs font-semibold">Time To
+              <input type="time" id="admin-time-to" value="17:30" class="mt-1 w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm">
+            </label>
+          </div>
         </div>
-    </header>
-
-    <main class="max-w-5xl mx-auto px-4 py-8">
-
-        <!-- ================= ADMIN VIEW ================= -->
-        <div id="view-admin" class="space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <div>
-                    <h2 class="text-lg font-semibold mb-1">Live Session QR Code & Custom Leave Settings</h2>
-                    <p class="text-sm text-slate-600">Configure your session details below and click <strong>"Generate QR Code"</strong> when you are ready to display it on your projector.</p>
-                </div>
-
-                <!-- Admin Custom Session Settings Form -->
-                <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-xl space-y-4">
-                    <h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider">Session Configuration</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Function / Reason Name:</label>
-                            <input type="text" id="admin-reason" value="Official School Event / CCA" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Time From:</label>
-                                <input type="text" id="admin-time-from" value="08:30 AM" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Time To:</label>
-                                <input type="text" id="admin-time-to" value="05:30 PM" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Name of Approving Lecturer:</label>
-                            <input type="text" id="admin-lecturer" value="Dr. John Tan" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Approving Lecturer Contact Number:</label>
-                            <input type="text" id="admin-contact" value="+65 6590 2000" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Manual Generate Button -->
-                    <div class="pt-2">
-                        <button onclick="generateQRCode()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow transition flex items-center gap-2">
-                            🖨️ Generate QR Code & Link
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="flex flex-col md:flex-row items-center gap-8">
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-inner flex justify-center items-center">
-                        <div id="qrcode"></div>
-                    </div>
-                    <div class="space-y-4 flex-1 w-full">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Student Form URL</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="student-url-display" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-xs font-mono text-slate-600">
-                                <button onclick="copyStudentUrl()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg transition">Copy</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Attendance Dashboard Table -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-semibold">Attendance & Leave Log</h2>
-                    <button onclick="fetchAttendance()" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
-                        🔄 Refresh Sheet Data
-                    </button>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase text-xs tracking-wider">
-                                <th class="p-3">Timestamp</th>
-                                <th class="p-3">Name</th>
-                                <th class="p-3">Class</th>
-                                <th class="p-3">Mobile</th>
-                                <th class="p-3">Email</th>
-                                <th class="p-3">Function / Reason</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendance-table-body" class="divide-y divide-slate-200">
-                            <tr>
-                                <td colspan="6" class="p-6 text-center text-slate-400">Loading attendance records...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="text-xs font-semibold">Approving Lecturer
+            <input id="admin-lecturer" value="Dr. John Tan" maxlength="100" class="mt-1 w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm">
+          </label>
+          <label class="text-xs font-semibold">Lecturer Contact
+            <input type="tel" id="admin-contact" value="+65 6590 2000" maxlength="30" class="mt-1 w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm">
+          </label>
         </div>
-
-        <!-- ================= STUDENT FORM VIEW (ISOLATED) ================= -->
-        <div id="view-student" class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6 hidden">
-            <div class="border-b pb-4">
-                <span class="text-xs font-bold tracking-wider text-indigo-600 uppercase">ITE College West</span>
-                <h2 class="text-xl font-bold text-slate-900">Student Leave Form Check-in</h2>
-                <p class="text-sm text-slate-600">Submit your details below to log your attendance and generate your official leave pass PDF.</p>
-            </div>
-
-            <form id="attendance-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                    <input type="text" id="name" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Class / Section</label>
-                        <input type="text" id="studentClass" placeholder="e.g. DIT/1A/01" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Student ID / NRIC No.</label>
-                        <input type="text" id="nric" placeholder="e.g. 1234567" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Mobile Number</label>
-                        <input type="tel" id="mobile" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                        <input type="email" id="email" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <!-- Locked Session Summary for Student -->
-                <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2 text-xs">
-                    <p class="font-bold text-indigo-900 uppercase">Session Details (Configured by Lecturer):</p>
-                    <p><strong>Reason / Function:</strong> <span id="display-locked-reason" class="font-medium text-slate-800"></span></p>
-                    <p><strong>Time:</strong> <span id="display-locked-time" class="font-medium text-slate-800"></span></p>
-                    <p><strong>Approving Lecturer:</strong> <span id="display-locked-lecturer" class="font-medium text-slate-800"></span> (<span id="display-locked-contact"></span>)</p>
-                </div>
-
-                <button type="submit" id="submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition flex justify-center items-center gap-2">
-                    Submit & Download Official Leave Form PDF
-                </button>
-            </form>
+        <button type="button" id="generate-qr" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl">🖨️ Generate QR Code & Link</button>
+      </div>
+      <div class="flex flex-col md:flex-row items-center gap-8">
+        <div class="bg-white p-4 rounded-xl border border-slate-200"><div id="qrcode"></div></div>
+        <div class="flex-1 w-full">
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Student Form URL</label>
+          <div class="flex gap-2">
+            <input id="student-url-display" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-xs font-mono">
+            <button type="button" id="copy-url" class="px-4 py-2 bg-slate-800 text-white text-xs rounded-lg">Copy</button>
+          </div>
         </div>
-
-    </main>
-
-    <!-- ================= OFFICIAL ITE PDF TEMPLATE (Positioned Off-Screen for Reliable Rendering) ================= -->
-    <div id="pdf-template" style="position: absolute; left: -9999px; top: 0; width: 800px; background: #ffffff; padding: 25px; font-family: Arial, sans-serif; color: #000000; font-size: 12px; line-height: 1.4;">
-        
-        <!-- Header -->
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
-            <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px;">ITE COLLEGE WEST</div>
-            <h1 style="font-size: 16px; font-weight: bold; margin: 4px 0;">STUDENT LEAVE FORM</h1>
-        </div>
-
-        <!-- Part A Header -->
-        <div style="background: #e2e8f0; padding: 5px 8px; font-weight: bold; font-size: 11px; border: 1px solid #000; margin-bottom: 8px;">
-            Part A: To be completed by students
-        </div>
-
-        <!-- Student Info Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
-            <tr>
-                <td style="padding: 5px; border: 1px solid #000; width: 18%; font-weight: bold;">Name:</td>
-                <td style="padding: 5px; border: 1px solid #000; width: 42%;" id="pdf-name">-</td>
-                <td style="padding: 5px; border: 1px solid #000; width: 18%; font-weight: bold;">NRIC No.:</td>
-                <td style="padding: 5px; border: 1px solid #000; width: 22%;" id="pdf-nric">-</td>
-            </tr>
-            <tr>
-                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Class:</td>
-                <td style="padding: 5px; border: 1px solid #000;" id="pdf-class">-</td>
-                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Date of Leave:</td>
-                <td style="padding: 5px; border: 1px solid #000;" id="pdf-date">-</td>
-            </tr>
-            <tr>
-                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Time:</td>
-                <td style="padding: 5px; border: 1px solid #000;" colspan="3">From <span id="pdf-time-from" style="font-weight: bold;">-</span> To <span id="pdf-time-to" style="font-weight: bold;">-</span></td>
-            </tr>
-            <tr>
-                <td style="padding: 5px; border: 1px solid #000; font-weight: bold;">Contact Info:</td>
-                <td style="padding: 5px; border: 1px solid #000;" colspan="3"><span id="pdf-mobile">-</span> | <span id="pdf-email">-</span></td>
-            </tr>
-        </table>
-
-        <!-- Reason for Leave Box -->
-        <div style="border: 1px solid #000; padding: 8px; margin-bottom: 10px; font-size: 11px;">
-            <div style="font-weight: bold; margin-bottom: 4px;">Reason for Leave: (Tick one)</div>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                    <td style="width: 50%; padding: 3px;">[ &nbsp; ] See doctor</td>
-                    <td style="width: 50%; padding: 3px;">[ &nbsp; ] Medical/dental appointment/check-up</td>
-                </tr>
-                <tr>
-                    <td style="padding: 3px;">[ &nbsp; ] Test/exam</td>
-                    <td style="padding: 3px;">[ &nbsp; ] Attend function at other ITE campus</td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="padding: 3px; font-weight: bold;">[ X ] Others / Official Function: <span id="pdf-reason" style="text-decoration: underline;">-</span></td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Approving Lecturer / Form Teacher Details -->
-        <div style="border: 1px solid #000; padding: 8px; margin-bottom: 12px; font-size: 11px;">
-            <div style="font-weight: bold; margin-bottom: 4px;">Name of Form Teacher / Approving Lecturer:</div>
-            <div>Name: <span id="pdf-lecturer" style="font-weight: bold;">-</span> &nbsp;&nbsp;|&nbsp;&nbsp; Contact: <span id="pdf-contact" style="font-weight: bold;">-</span></div>
-        </div>
-
-        <!-- Part B Header -->
-        <div style="background: #e2e8f0; padding: 5px 8px; font-weight: bold; font-size: 11px; border: 1px solid #000; margin-bottom: 8px;">
-            Part B: To be completed by staff
-        </div>
-
-        <!-- Part B Staff Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
-            <tr>
-                <td style="padding: 6px; border: 1px solid #000; width: 25%; font-weight: bold;">Approval of leave:</td>
-                <td style="padding: 6px; border: 1px solid #000;" colspan="3">[ X ] Yes &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] No</td>
-            </tr>
-            <tr>
-                <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Comments / Condition:</td>
-                <td style="padding: 6px; border: 1px solid #000;" colspan="3">Approved for official school event / CCA participation.</td>
-            </tr>
-            <tr>
-                <td style="padding: 6px; border: 1px solid #000; font-weight: bold;">Name of staff:</td>
-                <td style="padding: 6px; border: 1px solid #000; width: 40%;" id="pdf-lecturer-name">-</td>
-                <td style="padding: 6px; border: 1px solid #000; width: 15%; font-weight: bold;">Date:</td>
-                <td style="padding: 6px; border: 1px solid #000; width: 20%;" id="pdf-staff-date">-</td>
-            </tr>
-        </table>
-
-        <!-- Footer Note -->
-        <div style="margin-top: 15px; border-top: 1px dashed #94a3b8; padding-top: 6px; font-size: 10px; color: #64748b; text-align: center;">
-            Note: Forms should be submitted to Class Advisor for follow-up action. Generated securely via ITE Digital Portal.
-        </div>
+      </div>
     </div>
 
-    <script>
-        // Helper to parse URL parameters safely from hash
-        function getURLParams() {
-            const hash = window.location.hash;
-            const queryIndex = hash.indexOf('?');
-            if (queryIndex !== -1) {
-                return new URLSearchParams(hash.substring(queryIndex + 1));
-            }
-            return new URLSearchParams();
-        }
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-semibold">Attendance & Leave Log</h2>
+        <button type="button" id="refresh" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg">🔄 Refresh</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead><tr class="bg-slate-100 text-slate-600 uppercase text-xs">
+            <th class="p-3">Timestamp</th><th class="p-3">Name</th><th class="p-3">Class</th><th class="p-3">Mobile</th><th class="p-3">Email</th><th class="p-3">Function / Reason</th>
+          </tr></thead>
+          <tbody id="attendance-table-body"><tr><td colspan="6" class="p-6 text-center text-slate-400">Select Refresh to load records.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-        // Initialize App & Routing with Password Check for Admin
-        window.addEventListener('DOMContentLoaded', () => {
-            if (window.location.hash.startsWith('#student')) {
-                switchView('student');
-            } else {
-                verifyAdminPassword(true);
-            }
-        });
+  <section id="view-student" class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6 hidden">
+    <div class="border-b pb-4">
+      <span class="text-xs font-bold tracking-wider text-indigo-600 uppercase">ITE College West</span>
+      <h2 class="text-xl font-bold">Student Leave Form Check-in</h2>
+      <p class="text-sm text-slate-600">Submit your details to record attendance and download the leave pass.</p>
+    </div>
+    <form id="attendance-form" class="space-y-4">
+      <label class="block text-sm font-medium">Full Name
+        <input id="name" autocomplete="name" maxlength="100" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
+      </label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label class="text-sm font-medium">Class / Section
+          <input id="studentClass" maxlength="40" placeholder="e.g. DIT/1A/01" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
+        </label>
+        <label class="text-sm font-medium">Student ID
+          <input id="studentId" maxlength="30" autocomplete="off" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
+        </label>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <label class="text-sm font-medium">Mobile Number
+          <input type="tel" id="mobile" maxlength="30" autocomplete="tel" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
+        </label>
+        <label class="text-sm font-medium">Email Address
+          <input type="email" id="email" maxlength="120" autocomplete="email" required class="mt-1 w-full px-4 py-2.5 border rounded-lg">
+        </label>
+      </div>
+      <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-2 text-xs">
+        <p class="font-bold text-indigo-900 uppercase">Session Details</p>
+        <p><strong>Reason:</strong> <span id="locked-reason"></span></p>
+        <p><strong>Time:</strong> <span id="locked-time"></span></p>
+        <p><strong>Approving Lecturer:</strong> <span id="locked-lecturer"></span> (<span id="locked-contact"></span>)</p>
+      </div>
+      <button type="submit" id="submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 text-white font-semibold rounded-xl">Submit & Download Official Leave Form PDF</button>
+    </form>
+  </section>
+</main>
 
-        function requestAdminAccess() {
-            verifyAdminPassword(false);
-        }
+<!-- Hidden source only. It is cloned into the viewport for html2canvas. -->
+<div id="pdf-source">
+  <div id="pdf-document" style="width:760px;box-sizing:border-box;background:#fff;padding:24px;font-family:Arial,sans-serif;color:#000;font-size:12px;line-height:1.4">
+    <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:15px">
+      <div style="font-size:11px;font-weight:bold;letter-spacing:1px">ITE COLLEGE WEST</div>
+      <h1 style="font-size:16px;margin:4px 0">STUDENT LEAVE FORM</h1>
+    </div>
+    <div style="background:#e2e8f0;padding:5px 8px;font-weight:bold;border:1px solid #000;margin-bottom:8px">Part A: To be completed by students</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px">
+      <tr><td class="pdf-label">Name:</td><td class="pdf-cell" id="pdf-name">-</td><td class="pdf-label">Student ID:</td><td class="pdf-cell" id="pdf-student-id">-</td></tr>
+      <tr><td class="pdf-label">Class:</td><td class="pdf-cell" id="pdf-class">-</td><td class="pdf-label">Date of Leave:</td><td class="pdf-cell" id="pdf-date">-</td></tr>
+      <tr><td class="pdf-label">Time:</td><td class="pdf-cell" colspan="3">From <b id="pdf-time-from">-</b> To <b id="pdf-time-to">-</b></td></tr>
+      <tr><td class="pdf-label">Contact:</td><td class="pdf-cell" colspan="3"><span id="pdf-mobile">-</span> | <span id="pdf-email">-</span></td></tr>
+    </table>
+    <div style="border:1px solid #000;padding:8px;margin-bottom:10px;font-size:11px">
+      <b>Reason for Leave:</b>
+      <p>[ &nbsp; ] See doctor &nbsp;&nbsp; [ &nbsp; ] Medical/dental appointment/check-up</p>
+      <p>[ &nbsp; ] Test/exam &nbsp;&nbsp; [ &nbsp; ] Attend function at other ITE campus</p>
+      <p><b>[ X ] Others / Official Function: <u id="pdf-reason">-</u></b></p>
+    </div>
+    <div style="border:1px solid #000;padding:8px;margin-bottom:12px;font-size:11px">
+      <b>Name of Form Teacher / Approving Lecturer:</b><br>
+      Name: <b id="pdf-lecturer">-</b> &nbsp;|&nbsp; Contact: <b id="pdf-contact">-</b>
+    </div>
+    <div style="background:#e2e8f0;padding:5px 8px;font-weight:bold;border:1px solid #000;margin-bottom:8px">Part B: To be completed by staff</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:15px;font-size:11px">
+      <tr><td class="pdf-label">Approval of leave:</td><td class="pdf-cell" colspan="3">[ X ] Yes &nbsp;&nbsp; [ &nbsp; ] No</td></tr>
+      <tr><td class="pdf-label">Comments / Condition:</td><td class="pdf-cell" colspan="3">Approved for the stated official activity.</td></tr>
+      <tr><td class="pdf-label">Name of staff:</td><td class="pdf-cell" id="pdf-lecturer-name">-</td><td class="pdf-label">Date:</td><td class="pdf-cell" id="pdf-staff-date">-</td></tr>
+    </table>
+    <div style="margin-top:15px;border-top:1px dashed #94a3b8;padding-top:6px;font-size:10px;color:#64748b;text-align:center">Forms should be submitted to the Class Advisor for follow-up action.</div>
+  </div>
+</div>
 
-        function verifyAdminPassword(isInitialLoad) {
-            const enteredPass = prompt("Enter Admin Password:");
-            if (enteredPass === ADMIN_PASSWORD) {
-                switchView('admin');
-                generateQRCode();
-                fetchAttendance();
-            } else {
-                if (enteredPass !== null) {
-                    alert("Incorrect password!");
-                }
-                if (isInitialLoad) {
-                    switchView('student');
-                }
-            }
-        }
+<style>
+  .pdf-label { padding:6px;border:1px solid #000;font-weight:bold;width:18%; }
+  .pdf-cell { padding:6px;border:1px solid #000; }
+</style>
 
-        function generateQRCode() {
-            const reason = document.getElementById('admin-reason').value;
-            const timeFrom = document.getElementById('admin-time-from').value;
-            const timeTo = document.getElementById('admin-time-to').value;
-            const lecturer = document.getElementById('admin-lecturer').value;
-            const contact = document.getElementById('admin-contact').value;
+<script>
+'use strict';
+const CONFIG = Object.freeze({
+  GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyBWwEdOiEpi6b6kpkO_jnnbg1h9EBEf0IWTnrYIkB0ByNGyDFST6qadXkR6F7OdQnl/exec',
+  GOOGLE_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv',
+  // Client-side passwords are NOT secure. Replace this for testing only and rotate the exposed old password.
+  ADMIN_PASSWORD: 'CHANGE_THIS_PASSWORD_NOW'
+});
 
-            const baseUrl = window.location.origin + window.location.pathname;
-            const params = new URLSearchParams({
-                reason: reason,
-                from: timeFrom,
-                to: timeTo,
-                lecturer: lecturer,
-                contact: contact
-            });
+const $ = id => document.getElementById(id);
+const clean = (value, max=150) => String(value ?? '').trim().slice(0, max);
+function showStatus(message, type='info') {
+  const box = $('status');
+  box.textContent = message;
+  box.className = 'mb-4 rounded-lg px-4 py-3 text-sm ' + (type === 'error' ? 'bg-rose-50 text-rose-700' : type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700');
+}
+function getParams() {
+  const i = location.hash.indexOf('?');
+  return new URLSearchParams(i >= 0 ? location.hash.slice(i + 1) : '');
+}
+function formatTime(v) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(v)) return v;
+  const [h,m] = v.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+function sessionFromAdmin() {
+  return {
+    reason: clean($('admin-reason').value),
+    from: clean($('admin-time-from').value, 5),
+    to: clean($('admin-time-to').value, 5),
+    lecturer: clean($('admin-lecturer').value, 100),
+    contact: clean($('admin-contact').value, 30)
+  };
+}
+function sessionFromUrl() {
+  const p = getParams();
+  return {
+    reason: clean(p.get('reason') || 'Official School Event / CCA'),
+    from: clean(p.get('from') || '08:30', 5),
+    to: clean(p.get('to') || '17:30', 5),
+    lecturer: clean(p.get('lecturer') || 'Not specified', 100),
+    contact: clean(p.get('contact') || 'Not specified', 30)
+  };
+}
+function validSession(s) {
+  return s.reason && s.lecturer && s.contact && /^([01]\d|2[0-3]):[0-5]\d$/.test(s.from) && /^([01]\d|2[0-3]):[0-5]\d$/.test(s.to) && s.from < s.to;
+}
+function switchView(view) {
+  const admin = view === 'admin';
+  $('view-admin').classList.toggle('hidden', !admin);
+  $('view-student').classList.toggle('hidden', admin);
+  $('nav-buttons').classList.toggle('hidden', !admin);
+  if (!admin) {
+    const s = sessionFromUrl();
+    $('locked-reason').textContent = s.reason;
+    $('locked-time').textContent = `${formatTime(s.from)} to ${formatTime(s.to)}`;
+    $('locked-lecturer').textContent = s.lecturer;
+    $('locked-contact').textContent = s.contact;
+  }
+}
+function requestAdmin(initial=false) {
+  if (sessionStorage.getItem('admin-ok') === '1') return openAdmin();
+  const entered = prompt('Enter Admin Password:');
+  if (entered === CONFIG.ADMIN_PASSWORD && CONFIG.ADMIN_PASSWORD !== 'CHANGE_THIS_PASSWORD_NOW') {
+    sessionStorage.setItem('admin-ok','1'); openAdmin();
+  } else {
+    if (entered !== null) showStatus('Admin access denied. Set a new ADMIN_PASSWORD in CONFIG first.', 'error');
+    if (initial) switchView('student');
+  }
+}
+function openAdmin() { history.replaceState(null,'','#admin'); switchView('admin'); generateQRCode(false); fetchAttendance(); }
+function makeStudentUrl(s) {
+  const base = location.href.split('#')[0];
+  return `${base}#student?${new URLSearchParams(s).toString()}`;
+}
+function generateQRCode(notify=true) {
+  const s = sessionFromAdmin();
+  if (!validSession(s)) return showStatus('Complete all session fields and ensure the end time is later than the start time.', 'error');
+  const url = makeStudentUrl(s);
+  $('student-url-display').value = url;
+  $('qrcode').replaceChildren();
+  if (typeof QRCode !== 'function') return showStatus('QR library did not load. Check the network or host the library locally.', 'error');
+  new QRCode($('qrcode'), { text:url, width:180, height:180, colorDark:'#0f172a', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.H });
+  if (notify) showStatus('QR code and student link updated.', 'success');
+}
+async function copyUrl() {
+  const value = $('student-url-display').value;
+  if (!value) return showStatus('Generate the student link first.', 'error');
+  try { await navigator.clipboard.writeText(value); showStatus('Student link copied.', 'success'); }
+  catch { $('student-url-display').select(); document.execCommand('copy'); showStatus('Student link copied.', 'success'); }
+}
+function previewStudent() {
+  const s = sessionFromAdmin();
+  if (!validSession(s)) return showStatus('Complete the session settings first.', 'error');
+  location.hash = `student?${new URLSearchParams(s).toString()}`;
+  switchView('student');
+}
+function setPdfText(id, text) { $(id).textContent = text || '-'; }
+function populatePdf(data, s) {
+  const date = new Intl.DateTimeFormat('en-SG', {day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());
+  const fields = {
+    'pdf-name':data.name, 'pdf-class':data.studentClass, 'pdf-student-id':data.studentId,
+    'pdf-mobile':data.mobile, 'pdf-email':data.email, 'pdf-date':date,
+    'pdf-reason':s.reason, 'pdf-time-from':formatTime(s.from), 'pdf-time-to':formatTime(s.to),
+    'pdf-lecturer':s.lecturer, 'pdf-contact':s.contact, 'pdf-lecturer-name':s.lecturer, 'pdf-staff-date':date
+  };
+  Object.entries(fields).forEach(([id,v]) => setPdfText(id,v));
+}
+async function makePdf(data) {
+  if (typeof html2pdf !== 'function') throw new Error('html2pdf.js did not load');
+  const clone = $('pdf-document').cloneNode(true);
+  clone.removeAttribute('id');
+  const host = document.createElement('div');
+  host.id = 'pdf-render-host';
+  Object.assign(host.style, {position:'fixed',left:'0',top:'0',width:'800px',background:'#fff',zIndex:'-1',opacity:'1',pointerEvents:'none'});
+  host.appendChild(clone); document.body.appendChild(host);
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const safeName = data.name.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'') || 'Student';
+  try {
+    await html2pdf().set({
+      margin:[8,8,8,8], filename:`ITE_Leave_Form_${safeName}.pdf`,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:800},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy'],avoid:['tr']}
+    }).from(clone).save();
+  } finally { host.remove(); }
+}
+async function postRecord(payload) {
+  if (!CONFIG.GOOGLE_SCRIPT_URL) throw new Error('Google Script URL is not configured');
+  // Apps Script commonly requires no-cors from a static site. The response cannot be verified in this mode.
+  await fetch(CONFIG.GOOGLE_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)});
+}
+async function submitForm(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const s = sessionFromUrl();
+  if (!validSession(s)) return showStatus('The session link is incomplete or invalid. Ask the lecturer for a new QR code.', 'error');
+  const data = {
+    name:clean($('name').value,100), studentClass:clean($('studentClass').value,40),
+    studentId:clean($('studentId').value,30), mobile:clean($('mobile').value,30),
+    email:clean($('email').value,120), reason:s.reason,
+    timeFrom:s.from, timeTo:s.to, lecturer:s.lecturer, lecturerContact:s.contact
+  };
+  const btn = $('submit-btn'); btn.disabled = true; btn.textContent = 'Recording and generating PDF...';
+  try {
+    await postRecord(data);
+    populatePdf(data,s);
+    await makePdf(data);
+    form.reset(); showStatus('Submission sent and PDF downloaded.', 'success');
+  } catch (err) {
+    console.error(err); showStatus(`Unable to complete submission: ${err.message}`, 'error');
+  } finally { btn.disabled=false; btn.textContent='Submit & Download Official Leave Form PDF'; }
+}
+function parseCSV(text) {
+  const rows=[]; let row=[], field='', quoted=false;
+  for (let i=0;i<text.length;i++) {
+    const ch=text[i];
+    if (ch==='"') { if (quoted && text[i+1]==='"') { field+='"'; i++; } else quoted=!quoted; }
+    else if (ch===',' && !quoted) { row.push(field); field=''; }
+    else if ((ch==='\n'||ch==='\r') && !quoted) { if (ch==='\r'&&text[i+1]==='\n') i++; row.push(field); rows.push(row); row=[]; field=''; }
+    else field+=ch;
+  }
+  row.push(field); if (row.some(Boolean)) rows.push(row); return rows;
+}
+function td(value, classes='') { const el=document.createElement('td'); el.className=`p-3 ${classes}`; el.textContent=value || ''; return el; }
+async function fetchAttendance() {
+  const tbody=$('attendance-table-body');
+  tbody.innerHTML='<tr><td colspan="6" class="p-6 text-center text-slate-400">Loading records...</td></tr>';
+  try {
+    const res=await fetch(`${CONFIG.GOOGLE_CSV_URL}&_=${Date.now()}`, {cache:'no-store'});
+    if (!res.ok) throw new Error(`CSV request failed (${res.status})`);
+    const rows=parseCSV(await res.text()).slice(1).filter(r=>r.length>=6&&r[1]).reverse();
+    tbody.replaceChildren();
+    if (!rows.length) { tbody.innerHTML='<tr><td colspan="6" class="p-6 text-center text-slate-400">No records found.</td></tr>'; return; }
+    rows.forEach(c=>{ const tr=document.createElement('tr'); tr.className='hover:bg-slate-50 border-t'; tr.append(td(c[0],'text-xs text-slate-500'),td(c[1],'font-medium'),td(c[2]),td(c[3]),td(c[4]),td(c[5],'text-indigo-700 font-medium')); tbody.appendChild(tr); });
+  } catch(err) { console.error(err); tbody.innerHTML='<tr><td colspan="6" class="p-6 text-center text-rose-600">Could not load the published CSV. Check publishing and CORS access.</td></tr>'; }
+}
 
-            const studentUrl = `${baseUrl}#student?${params.toString()}`;
-            document.getElementById('student-url-display').value = studentUrl;
-
-            // Re-generate QR Code
-            document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), {
-                text: studentUrl,
-                width: 180,
-                height: 180,
-                colorDark: "#0f172a",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-            alert("QR Code updated successfully with current settings!");
-        }
-
-        function switchView(view) {
-            const adminView = document.getElementById('view-admin');
-            const studentView = document.getElementById('view-student');
-            const navButtons = document.getElementById('nav-buttons');
-            
-            if (view === 'admin') {
-                adminView.classList.remove('hidden');
-                studentView.classList.add('hidden');
-                if (navButtons) navButtons.style.display = 'flex';
-                history.pushState(null, null, '#admin');
-                fetchAttendance();
-            } else {
-                adminView.classList.add('hidden');
-                studentView.classList.remove('hidden');
-                if (navButtons) navButtons.style.display = 'none';
-
-                // Extract parameters using robust helper or fallback inputs
-                const params = getURLParams();
-                document.getElementById('display-locked-reason').textContent = params.get('reason') || document.getElementById('admin-reason').value;
-                document.getElementById('display-locked-time').textContent = (params.get('from') || document.getElementById('admin-time-from').value) + ' to ' + (params.get('to') || document.getElementById('admin-time-to').value);
-                document.getElementById('display-locked-lecturer').textContent = params.get('lecturer') || document.getElementById('admin-lecturer').value;
-                document.getElementById('display-locked-contact').textContent = params.get('contact') || document.getElementById('admin-contact').value;
-            }
-        }
-
-        function previewStudentView() {
-            const reason = document.getElementById('admin-reason').value;
-            const timeFrom = document.getElementById('admin-time-from').value;
-            const timeTo = document.getElementById('admin-time-to').value;
-            const lecturer = document.getElementById('admin-lecturer').value;
-            const contact = document.getElementById('admin-contact').value;
-
-            const params = new URLSearchParams({ reason, from: timeFrom, to: timeTo, lecturer, contact });
-            history.pushState(null, null, `#student?${params.toString()}`);
-            switchView('student');
-        }
-
-        function copyStudentUrl() {
-            const copyText = document.getElementById('student-url-display');
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("Student QR link copied to clipboard!");
-        }
-
-        // Handle Student Submission & Apps Script POST
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-            btn.textContent = "Processing & Generating Official PDF...";
-
-            const params = getURLParams();
-            const reason = params.get('reason') || document.getElementById('admin-reason').value;
-            const timeFrom = params.get('from') || document.getElementById('admin-time-from').value;
-            const timeTo = params.get('to') || document.getElementById('admin-time-to').value;
-            const lecturer = params.get('lecturer') || document.getElementById('admin-lecturer').value;
-            const contact = params.get('contact') || document.getElementById('admin-contact').value;
-
-            const formData = {
-                name: document.getElementById('name').value,
-                studentClass: document.getElementById('studentClass').value,
-                nric: document.getElementById('nric').value,
-                mobile: document.getElementById('mobile').value,
-                email: document.getElementById('email').value,
-                reason: reason
-            };
-
-            // Populate PDF template fields
-            document.getElementById('pdf-name').textContent = formData.name || '-';
-            document.getElementById('pdf-class').textContent = formData.studentClass || '-';
-            document.getElementById('pdf-nric').textContent = formData.nric || '-';
-            document.getElementById('pdf-mobile').textContent = formData.mobile || '-';
-            document.getElementById('pdf-email').textContent = formData.email || '-';
-            const currentDate = new Date().toLocaleDateString();
-            document.getElementById('pdf-date').textContent = currentDate;
-            document.getElementById('pdf-reason').textContent = reason || '-';
-            document.getElementById('pdf-time-from').textContent = timeFrom || '-';
-            document.getElementById('pdf-time-to').textContent = timeTo || '-';
-            document.getElementById('pdf-lecturer').textContent = lecturer || '-';
-            document.getElementById('pdf-contact').textContent = contact || '-';
-            document.getElementById('pdf-lecturer-name').textContent = lecturer || '-';
-            document.getElementById('pdf-staff-date').textContent = currentDate;
-
-            // Send to Google Sheets via Apps Script
-            if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("YOUR_")) {
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formData)
-                    });
-                } catch (err) {
-                    console.error("Error sending to Google Sheets:", err);
-                }
-            }
-
-            // Target the off-screen template container
-            const element = document.getElementById('pdf-template');
-
-            const opt = {
-                margin:       10,
-                filename:     `ITE_Leave_Form_${formData.name.replace(/\s+/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().from(element).set(opt).save().then(() => {
-                btn.disabled = false;
-                btn.textContent = "Submit & Download Official Leave Form PDF";
-                alert("Attendance recorded and PDF leave form downloaded successfully!");
-                document.getElementById('attendance-form').reset();
-            }).catch(err => {
-                console.error(err);
-                btn.disabled = false;
-                btn.textContent = "Submit & Download Official Leave Form PDF";
-                alert("PDF generation failed. Please try again.");
-            });
-        }
-
-        // Fetch Attendance using Google Sheets CSV Publish
-        async function fetchAttendance() {
-            const tbody = document.getElementById('attendance-table-body');
-
-            if (!GOOGLE_CSV_URL || GOOGLE_CSV_URL.includes("YOUR_")) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 bg-amber-50">Please set GOOGLE_CSV_URL to view records.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Loading attendance records...</td></tr>`;
-
-            try {
-                const response = await fetch(GOOGLE_CSV_URL);
-                const csvText = await response.text();
-                
-                const rows = parseCSV(csvText);
-                
-                if (rows.length <= 1) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No attendance records found yet.</td></tr>`;
-                    return;
-                }
-
-                const dataRows = rows.slice(1).reverse();
-
-                tbody.innerHTML = dataRows.map(cols => {
-                    if (cols.length < 6 || !cols[1]) return '';
-                    return `
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 text-xs text-slate-500">${escapeHtml(cols[0])}</td>
-                            <td class="p-3 font-medium text-slate-800">${escapeHtml(cols[1])}</td>
-                            <td class="p-3 text-slate-600">${escapeHtml(cols[2])}</td>
-                            <td class="p-3 text-slate-600">${escapeHtml(cols[3])}</td>
-                            <td class="p-3 text-slate-600">${escapeHtml(cols[4])}</td>
-                            <td class="p-3 text-slate-600 font-medium text-indigo-700">${escapeHtml(cols[5])}</td>
-                        </tr>
-                    `;
-                }).join('');
-
-            } catch (err) {
-                console.error("Failed to fetch CSV attendance:", err);
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-500">Error loading attendance from CSV. Make sure the sheet is published to web.</td></tr>`;
-            }
-        }
-
-        // Helper to cleanly parse CSV text
-        function parseCSV(text) {
-            let p = '', c = '', r = [[]], q = false;
-            for (let i = 0; i < text.length; i++) {
-                c = text[i];
-                let nextC = text[i+1];
-                if (c === '"') {
-                    if (q && nextC === '"') { r[r.length-1].push(p); p=''; i++; }
-                    else { q = !q; }
-                } else if (c === ',' && !q) {
-                    r[r.length-1].push(p); p='';
-                } else if ((c === '\r' || c === '\n') && !q) {
-                    if (c === '\r' && nextC === '\n') { i++; }
-                    r[r.length-1].push(p); p=''; r.push([]);
-                } else {
-                    p += c;
-                }
-            }
-            r[r.length-1].push(p);
-            return r.filter(row => row.length > 1 && row[0] !== "");
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-    </script>
+$('nav-admin').addEventListener('click',()=>requestAdmin(false));
+$('preview-student').addEventListener('click',previewStudent);
+$('generate-qr').addEventListener('click',()=>generateQRCode(true));
+$('copy-url').addEventListener('click',copyUrl);
+$('refresh').addEventListener('click',fetchAttendance);
+$('attendance-form').addEventListener('submit',submitForm);
+window.addEventListener('hashchange',()=> location.hash.startsWith('#student') ? switchView('student') : requestAdmin(false));
+window.addEventListener('DOMContentLoaded',()=> location.hash.startsWith('#student') ? switchView('student') : requestAdmin(true));
+</script>
 </body>
 </html>
