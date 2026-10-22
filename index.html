@@ -125,41 +125,78 @@
 
 <!-- Hidden source only. It is cloned into the viewport for html2canvas. -->
 <div id="pdf-source">
-  <div id="pdf-document" style="width:720px;box-sizing:border-box;background:#fff;padding:20px;font-family:Arial,sans-serif;color:#000;font-size:12px;line-height:1.4">
-    <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:15px">
+  <div id="pdf-document" style="width:680px;box-sizing:border-box;background:#fff;padding:18px;font-family:Arial,sans-serif;color:#000;font-size:12px;line-height:1.35;overflow:visible">
+    <div style="text-align:center;border-bottom:2px solid #000;padding:4px 0 10px;margin-bottom:14px">
       <div style="font-size:11px;font-weight:bold;letter-spacing:1px">ITE COLLEGE WEST</div>
-      <h1 style="font-size:16px;margin:4px 0">STUDENT LEAVE FORM</h1>
+      <h1 style="font-size:17px;margin:5px 0 0">STUDENT LEAVE FORM</h1>
     </div>
-    <div style="background:#e2e8f0;padding:5px 8px;font-weight:bold;border:1px solid #000;margin-bottom:8px">Part A: To be completed by students</div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px">
-      <tr><td class="pdf-label">Name:</td><td class="pdf-cell" id="pdf-name">-</td><td class="pdf-label">Student ID:</td><td class="pdf-cell" id="pdf-student-id">-</td></tr>
-      <tr><td class="pdf-label">Class:</td><td class="pdf-cell" id="pdf-class">-</td><td class="pdf-label">Date of Leave:</td><td class="pdf-cell" id="pdf-date">-</td></tr>
-      <tr><td class="pdf-label">Time:</td><td class="pdf-cell" colspan="3">From <b id="pdf-time-from">-</b> To <b id="pdf-time-to">-</b></td></tr>
-      <tr><td class="pdf-label">Contact:</td><td class="pdf-cell" colspan="3"><span id="pdf-mobile">-</span> | <span id="pdf-email">-</span></td></tr>
-    </table>
-    <div style="border:1px solid #000;padding:8px;margin-bottom:10px;font-size:11px">
-      <div style="font-weight:bold;margin-bottom:6px">Official Function / Approved Activity</div>
-      <div style="min-height:40px;padding:6px;border:1px solid #666;background:#fafafa;font-weight:bold;box-sizing:border-box;overflow-wrap:anywhere">
+
+    <div style="border:1.5px solid #000;box-sizing:border-box;width:100%;overflow:hidden">
+      <div style="background:#e2e8f0;padding:7px 9px;font-weight:bold;border-bottom:1px solid #000;box-sizing:border-box">Part A: To be completed by students</div>
+
+      <div style="display:grid;grid-template-columns:120px minmax(0,1fr) 120px minmax(0,1fr);width:100%;box-sizing:border-box">
+        <div class="pdf-field-label">Name:</div><div class="pdf-field-value" id="pdf-name">-</div>
+        <div class="pdf-field-label">Student ID:</div><div class="pdf-field-value pdf-last-col" id="pdf-student-id">-</div>
+
+        <div class="pdf-field-label">Class:</div><div class="pdf-field-value" id="pdf-class">-</div>
+        <div class="pdf-field-label">Date of Leave:</div><div class="pdf-field-value pdf-last-col" id="pdf-date">-</div>
+
+        <div class="pdf-field-label">Time:</div><div class="pdf-field-value pdf-span-3">From <b id="pdf-time-from">-</b> To <b id="pdf-time-to">-</b></div>
+
+        <div class="pdf-field-label pdf-last-row">Contact:</div><div class="pdf-field-value pdf-span-3 pdf-last-row"><span id="pdf-mobile">-</span> | <span id="pdf-email">-</span></div>
+      </div>
+    </div>
+
+    <div style="border:1.5px solid #000;box-sizing:border-box;width:100%;margin-top:10px;padding:9px;overflow:hidden">
+      <div style="font-weight:bold;margin-bottom:7px">Official Function / Approved Activity</div>
+      <div style="border:1px solid #666;box-sizing:border-box;width:100%;min-height:44px;padding:8px;background:#fafafa;font-weight:bold;overflow-wrap:anywhere;word-break:break-word">
         <span id="pdf-reason">-</span>
       </div>
     </div>
-    <div style="border:1px solid #000;padding:8px;margin-bottom:12px;font-size:11px">
-      <b>Name of Form Teacher / Approving Lecturer:</b><br>
-      Name: <b id="pdf-lecturer">-</b> &nbsp;|&nbsp; Contact: <b id="pdf-contact">-</b>
+
+    <div style="border:1.5px solid #000;box-sizing:border-box;width:100%;margin-top:10px;padding:9px;overflow:hidden">
+      <div style="font-weight:bold;margin-bottom:4px">Name of Form Teacher / Approving Lecturer:</div>
+      <div>Name: <b id="pdf-lecturer">-</b> &nbsp; | &nbsp; Contact: <b id="pdf-contact">-</b></div>
     </div>
-    <div style="background:#e2e8f0;padding:5px 8px;font-weight:bold;border:1px solid #000;margin-bottom:8px">Part B: To be completed by staff</div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:15px;font-size:11px">
-      <tr><td class="pdf-label">Approval of leave:</td><td class="pdf-cell" colspan="3">[ X ] Yes &nbsp;&nbsp; [ &nbsp; ] No</td></tr>
-      <tr><td class="pdf-label">Comments / Condition:</td><td class="pdf-cell" colspan="3">Approved for the stated official activity.</td></tr>
-      <tr><td class="pdf-label">Name of staff:</td><td class="pdf-cell" id="pdf-lecturer-name">-</td><td class="pdf-label">Date:</td><td class="pdf-cell" id="pdf-staff-date">-</td></tr>
-    </table>
-    <div style="margin-top:15px;border-top:1px dashed #94a3b8;padding-top:6px;font-size:10px;color:#64748b;text-align:center">Forms should be submitted to the Class Advisor for follow-up action.</div>
+
+    <div style="border:1.5px solid #000;box-sizing:border-box;width:100%;margin-top:10px;overflow:hidden">
+      <div style="background:#e2e8f0;padding:7px 9px;font-weight:bold;border-bottom:1px solid #000;box-sizing:border-box">Part B: To be completed by staff</div>
+
+      <div style="display:grid;grid-template-columns:120px minmax(0,1fr) 120px minmax(0,1fr);width:100%;box-sizing:border-box">
+        <div class="pdf-field-label">Approval of leave:</div><div class="pdf-field-value pdf-span-3">[ X ] Yes &nbsp;&nbsp;&nbsp; [ &nbsp; ] No</div>
+
+        <div class="pdf-field-label">Comments / Condition:</div><div class="pdf-field-value pdf-span-3">Approved for the stated official activity.</div>
+
+        <div class="pdf-field-label pdf-last-row">Name of staff:</div><div class="pdf-field-value pdf-last-row" id="pdf-lecturer-name">-</div>
+        <div class="pdf-field-label pdf-last-row">Date:</div><div class="pdf-field-value pdf-last-col pdf-last-row" id="pdf-staff-date">-</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;border-top:1px dashed #94a3b8;padding-top:7px;font-size:10px;color:#64748b;text-align:center">Forms should be submitted to the Class Advisor for follow-up action.</div>
   </div>
 </div>
 
 <style>
-  .pdf-label { padding:6px;border:1px solid #000;font-weight:bold;width:18%; }
-  .pdf-cell { padding:6px;border:1px solid #000; }
+  #pdf-document, #pdf-document * { box-sizing:border-box; }
+  .pdf-field-label {
+    padding:7px;
+    font-weight:bold;
+    border-right:1px solid #000;
+    border-bottom:1px solid #000;
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  .pdf-field-value {
+    padding:7px;
+    border-right:1px solid #000;
+    border-bottom:1px solid #000;
+    min-width:0;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .pdf-last-col { border-right:0; }
+  .pdf-last-row { border-bottom:0; }
+  .pdf-span-3 { grid-column:span 3; border-right:0; }
 </style>
 
 <script>
@@ -168,7 +205,7 @@ const CONFIG = Object.freeze({
   GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyBWwEdOiEpi6b6kpkO_jnnbg1h9EBEf0IWTnrYIkB0ByNGyDFST6qadXkR6F7OdQnl/exec',
   GOOGLE_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv',
   // Client-side passwords are NOT secure. Replace this for testing only and rotate the exposed old password.
-  ADMIN_PASSWORD: 'Life$kills'
+  ADMIN_PASSWORD: 'CHANGE_THIS_PASSWORD_NOW'
 });
 
 const $ = id => document.getElementById(id);
@@ -276,7 +313,7 @@ async function makePdf(data) {
   clone.removeAttribute('id');
   const host = document.createElement('div');
   host.id = 'pdf-render-host';
-  Object.assign(host.style, {position:'fixed',left:'-30px',top:'0',width:'720px',background:'#fff',zIndex:'-1',opacity:'1',pointerEvents:'none'});
+  Object.assign(host.style, {position:'fixed',left:'0',top:'0',width:'680px',background:'#fff',zIndex:'-1',opacity:'1',pointerEvents:'none'});
   host.appendChild(clone); document.body.appendChild(host);
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const safeName = data.name.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'') || 'Student';
@@ -284,7 +321,7 @@ async function makePdf(data) {
     await html2pdf().set({
       margin:[12,12,12,12], filename:`ITE_Leave_Form_${safeName}.pdf`,
       image:{type:'jpeg',quality:0.98},
-      html2canvas:{scale:1.5,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:720},
+      html2canvas:{scale:1.5,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:680},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy'],avoid:['tr']}
     }).from(clone).save();
