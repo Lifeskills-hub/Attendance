@@ -285,38 +285,52 @@
             });
         }
 
-        // Fetch Attendance from Google Sheet
-        async function fetchAttendance() {
-            const tbody = document.getElementById('attendance-table-body');
-            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_WEB_APP_URL_HERE") {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 bg-amber-50">Please configure your Google Apps Script URL in the code to view live attendance records.</td></tr>`;
-                return;
-            }
+      // Fetch Attendance using JSONP to bypass CORS & Redirect restrictions
+function fetchAttendance() {
+    const tbody = document.getElementById('attendance-table-body');
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_WEB_APP_URL_HERE") {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 bg-amber-50">Please configure your Google Apps Script URL in the code to view live attendance records.</td></tr>`;
+        return;
+    }
 
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL);
-                const data = await response.json();
-                
-                if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No attendance records found yet.</td></tr>`;
-                    return;
-                }
+    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Loading attendance records...</td></tr>`;
 
-                tbody.innerHTML = data.reverse().map(row => `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 text-xs text-slate-500">${new Date(row.timestamp).toLocaleString()}</td>
-                        <td class="p-3 font-medium text-slate-800">${escapeHtml(row.name)}</td>
-                        <td class="p-3 text-slate-600">${escapeHtml(row.studentClass)}</td>
-                        <td class="p-3 text-slate-600">${escapeHtml(row.mobile)}</td>
-                        <td class="p-3 text-slate-600">${escapeHtml(row.email)}</td>
-                        <td class="p-3 text-slate-600">${escapeHtml(row.reason)}</td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                console.error("Failed to fetch attendance:", err);
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-500">Error loading attendance from Google Sheet. Check console for details.</td></tr>`;
-            }
+    // Unique callback name
+    const callbackName = 'googleSheetsCallback_' + Math.round(100000 * Math.random());
+
+    // Define global callback handler
+    window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No attendance records found yet.</td></tr>`;
+            return;
         }
+
+        tbody.innerHTML = data.reverse().map(row => `
+            <tr class="hover:bg-slate-50">
+                <td class="p-3 text-xs text-slate-500">${row.timestamp ? new Date(row.timestamp).toLocaleString() : '-'}</td>
+                <td class="p-3 font-medium text-slate-800">${escapeHtml(row.name)}</td>
+                <td class="p-3 text-slate-600">${escapeHtml(row.studentClass)}</td>
+                <td class="p-3 text-slate-600">${escapeHtml(row.mobile)}</td>
+                <td class="p-3 text-slate-600">${escapeHtml(row.email)}</td>
+                <td class="p-3 text-slate-600">${escapeHtml(row.reason)}</td>
+            </tr>
+        `).join('');
+    };
+
+    // Inject Script Tag to trigger JSONP request
+    const script = document.createElement('script');
+    script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}`;
+    script.onerror = function() {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-500">Error loading data. Verify your Apps Script Web App access is set to "Anyone".</td></tr>`;
+    };
+
+    document.body.appendChild(script);
+}
 
         function escapeHtml(text) {
             if (!text) return '';
