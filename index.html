@@ -291,7 +291,7 @@ async function fetchAttendance() {
     const tbody = document.getElementById('attendance-table-body');
     
     // Replace GOOGLE_SCRIPT_URL here with your CSV URL variable if desired
-    const CSV_URL = "YOUR_PUBLISHED_CSV_LINK_HERE"; 
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq4QAJDTwuDjNcDxPlzw5882Ea-V6crqmj5Q4CAXiQRg2mcHCmRSKWQXltOKzQn7i2BeHYePwBmyHC/pub?output=csv"; 
 
     if (!CSV_URL || CSV_URL.includes("YOUR_")) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 bg-amber-50">Please paste your Published CSV URL in fetchAttendance() to view records.</td></tr>`;
